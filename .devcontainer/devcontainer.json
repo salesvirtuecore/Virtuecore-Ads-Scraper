@@ -1,6 +1,6 @@
 {
   "name": "Virtuecore Ads Scraper",
-  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
   "customizations": {
     "vscode": {
       "settings": {
@@ -9,12 +9,11 @@
         "files.insertFinalNewline": true
       },
       "extensions": [
-        "ms-python.python",
-        "ms-toolsai.jupyter",
-        "esbenp.prettier-vscode"
+        "ms-python.python"
       ]
     }
   },
   "postCreateCommand": "echo \"Dev container ready.\"",
+  "updateContentCommand": "true",
   "remoteUser": "vscode"
 }
