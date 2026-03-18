@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ADINT · VirtueCore</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@300;400;500&display=swap"/>
+<style>
+/* ═══════════════════════════════════════════════════
+   RESET & ROOT
+═══════════════════════════════════════════════════ */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased}
+:root{
+  --blk:#05050A;--s1:#0A0A10;--s2:#0F0F18;--s3:#15151E;--s4:#1C1C28;
+  --ln:#1A1A24;--ln2:#252530;--ln3:#30303C;
+  --g:#C4A24A;--g2:#D4B05A;--g3:#A8882A;
+  --gdim:rgba(196,162,74,0.1);--gln:rgba(196,162,74,0.2);--ggl:rgba(196,162,74,0.35);
+  --w:#F0F0EA;--grey:#80808C;--grey2:#4A4A58;--grey3:#2E2E3A;
+  --win:#3DB87A;--wdim:rgba(61,184,122,0.1);--wln:rgba(61,184,122,0.25);
+  --danger:#C04848;
+  --fn:'DM Sans',sans-serif;--ser:'Cormorant Garamond',serif;--mn:'DM Mono',monospace;
+  --r:0px;
+}
+html,body{height:100%;background:var(--blk);color:var(--w);font-family:var(--fn);font-size:13px;line-height:1.5;overflow:hidden}
+#app{height:100vh}
+button,input,select{font-family:var(--fn)}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--ln3)}
+
+/* ═══════════════════════════════════════════════════
+   LOGIN — CINEMATIC
+═══════════════════════════════════════════════════ */
+.login-scene{
+  height:100vh;display:flex;align-items:center;justify-content:center;
+  background:var(--blk);position:relative;overflow:hidden;
+}
+/* animated grid lines */
+.grid-h,.grid-v{position:absolute;inset:0;pointer-events:none}
+.grid-h{background-image:repeating-linear-gradient(0deg,transparent,transparent 63px,rgba(255,255,255,0.028) 63px,rgba(255,255,255,0.028) 64px);animation:gridIn 1.4s ease forwards;opacity:0}
+.grid-v{background-image:repeating-linear-gradient(90deg,transparent,transparent 63px,rgba(255,255,255,0.028) 63px,rgba(255,255,255,0.028) 64px);animation:gridIn 1.4s ease .1s forwards;opacity:0}
+@keyframes gridIn{0%{opacity:0;transform:scale(1.04)}100%{opacity:1;transform:scale(1)}}
+/* radial glow */
+.login-glow{position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(196,162,74,0.07) 0%,transparent 70%);left:50%;top:50%;transform:translate(-50%,-50%);animation:glowPulse 4s ease-in-out infinite;pointer-events:none}
+@keyframes glowPulse{0%,100%{opacity:.6;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}}
+/* corner accents */
+.corner{position:absolute;width:40px;height:40px;pointer-events:none}
+.corner-tl{top:24px;left:24px;border-top:1px solid var(--g);border-left:1px solid var(--g);animation:cornerIn .8s ease .6s forwards;opacity:0}
+.corner-tr{top:24px;right:24px;border-top:1px solid var(--g);border-right:1px solid var(--g);animation:cornerIn .8s ease .7s forwards;opacity:0}
+.corner-bl{bottom:24px;left:24px;border-bottom:1px solid var(--g);border-left:1px solid var(--g);animation:cornerIn .8s ease .8s forwards;opacity:0}
+.corner-br{bottom:24px;right:24px;border-bottom:1px solid var(--g);border-right:1px solid var(--g);animation:cornerIn .8s ease .9s forwards;opacity:0}
+@keyframes cornerIn{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+/* login card */
+.login-card{
+  position:relative;z-index:2;width:400px;
+  background:var(--s1);border:1px solid var(--ln2);
+  padding:48px 44px;
+  animation:cardRise .9s cubic-bezier(.16,1,.3,1) .3s forwards;opacity:0;
+  box-shadow:0 40px 100px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.04) inset;
+}
+@keyframes cardRise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+/* gold top bar */
+.login-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--g),transparent);animation:topBarSlide 1.2s ease .8s forwards;opacity:0;transform:scaleX(.3)}
+@keyframes topBarSlide{from{opacity:0;transform:scaleX(.3)}to{opacity:1;transform:scaleX(1)}}
+/* wordmark reveal */
+.lm-wrap{margin-bottom:32px;animation:fadeUp .6s ease .5s forwards;opacity:0;transform:translateY(8px)}
+@keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
+.lm{font-family:var(--ser);font-size:34px;font-weight:600;letter-spacing:6px;text-transform:uppercase;color:var(--w);line-height:1}
+.lm span{color:var(--g)}
+.lm-line{height:1px;background:linear-gradient(90deg,var(--g),transparent);margin-top:8px;animation:lineExpand .8s ease .9s forwards;transform:scaleX(0);transform-origin:left}
+@keyframes lineExpand{to{transform:scaleX(1)}}
+.lm-sub{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--grey2);font-family:var(--mn);margin-top:8px}
+/* form fields */
+.lf{margin-bottom:18px;animation:fadeUp .5s ease var(--del) forwards;opacity:0;transform:translateY(8px)}
+.lf:nth-child(1){--del:.7s}.lf:nth-child(2){--del:.82s}.lf:nth-child(3){--del:.94s}
+.lf label{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--grey2);font-family:var(--mn);display:block;margin-bottom:7px}
+.lfi{width:100%;background:var(--s2);border:1px solid var(--ln2);color:var(--w);padding:11px 14px;font-size:13px;outline:none;transition:border-color .2s,box-shadow .2s}
+.lfi:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(196,162,74,0.08)}
+.lfi::placeholder{color:var(--grey3)}
+/* error */
+.lerr{border-left:2px solid var(--danger);background:rgba(192,72,72,0.08);padding:10px 13px;font-size:12px;color:#D07070;margin-bottom:16px;line-height:1.5;animation:fadeUp .3s ease forwards}
+/* submit */
+.lbtn-wrap{animation:fadeUp .5s ease 1.05s forwards;opacity:0;transform:translateY(8px)}
+.lbtn{
+  width:100%;background:var(--g);color:var(--blk);border:none;
+  padding:13px;font-size:10px;font-weight:600;letter-spacing:2.5px;
+  text-transform:uppercase;font-family:var(--mn);position:relative;overflow:hidden;
+  transition:background .2s,transform .1s;
+}
+.lbtn::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,0.2) 50%,transparent 70%);transform:translateX(-100%);transition:transform .6s}
+.lbtn:hover::after{transform:translateX(100%)}
+.lbtn:hover{background:var(--g2)}
+.lbtn:active{transform:scale(.99)}
+.lbtn:disabled{opacity:.35;cursor:not-allowed}
+.l-note{text-align:center;font-size:10px;color:var(--grey2);margin-top:18px;letter-spacing:.3px;animation:fadeUp .4s ease 1.15s forwards;opacity:0}
+.l-note a{color:var(--g);text-decoration:none}
+
+/* ═══════════════════════════════════════════════════
+   SHELL
+═══════════════════════════════════════════════════ */
+.shell{display:flex;height:100vh;overflow:hidden}
+/* SIDEBAR */
+.sb{width:212px;flex-shrink:0;background:var(--s1);border-right:1px solid var(--ln);display:flex;flex-direction:column;position:relative}
+.sb::after{content:'';position:absolute;top:0;right:0;width:1px;height:100%;background:linear-gradient(180deg,transparent,var(--gln) 30%,var(--gln) 70%,transparent);pointer-events:none;opacity:.5}
+.sb-head{padding:22px 20px 18px;border-bottom:1px solid var(--ln)}
+.sb-wm{font-family:var(--ser);font-size:20px;font-weight:600;letter-spacing:4px;text-transform:uppercase;color:var(--w)}
+.sb-wm span{color:var(--g)}
+.sb-sub{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--grey2);font-family:var(--mn);margin-top:2px}
+.sb-nav{padding:8px 0;flex:1}
+.sb-lbl{padding:14px 20px 5px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--grey2);font-family:var(--mn)}
+.ni{display:flex;align-items:center;gap:11px;padding:9px 20px;color:var(--grey);font-size:12px;font-weight:500;cursor:pointer;transition:.12s;border-left:2px solid transparent;user-select:none;position:relative}
+.ni:hover{color:var(--w);background:rgba(255,255,255,0.02)}
+.ni.active{color:var(--g);border-left-color:var(--g);background:var(--gdim)}
+.ni-ic{width:14px;text-align:center;font-size:12px;flex-shrink:0}
+/* token meter */
+.tw{margin:14px 14px 12px;padding:14px;border:1px solid var(--ln2);background:var(--s2);position:relative;overflow:hidden}
+.tw::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--g),transparent);opacity:.4}
+.tw-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.tw-lbl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--grey2);font-family:var(--mn)}
+.tw-pct{font-size:9px;font-family:var(--mn);color:var(--grey2)}
+.tw-num{font-family:var(--ser);font-size:28px;font-weight:600;color:var(--w);line-height:1}
+.tw-of{font-size:10px;color:var(--grey2);font-family:var(--mn);margin-top:2px}
+.tw-track{height:1px;background:var(--ln3);margin-top:11px}
+.tw-fill{height:100%;background:linear-gradient(90deg,var(--g3),var(--g));transition:width .6s cubic-bezier(.4,0,.2,1)}
+.tw-fill.low{background:var(--g)}.tw-fill.crit{background:var(--danger)}
+/* user chip */
+.uw{margin:0 14px 10px;padding:10px 12px;border:1px solid var(--ln);display:flex;align-items:center;gap:10px}
+.av{width:28px;height:28px;background:linear-gradient(135deg,var(--g3),var(--g));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--blk);flex-shrink:0;font-family:var(--mn)}
+.un{font-size:12px;font-weight:600;color:var(--w)}
+.ur{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--grey2);font-family:var(--mn);margin-top:1px}
+.so{background:none;border:none;font-size:10px;color:var(--grey2);padding:2px 14px 14px;text-align:left;letter-spacing:.3px;transition:.12s}
+.so:hover{color:var(--danger)}
+
+/* MAIN */
+.main{flex:1;overflow-y:auto;background:var(--blk);scrollbar-width:thin;scrollbar-color:var(--ln3) transparent}
+.pg-enter{animation:pgIn .35s cubic-bezier(.16,1,.3,1)}
+@keyframes pgIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.ph{padding:26px 30px 20px;border-bottom:1px solid var(--ln);display:flex;align-items:flex-end;justify-content:space-between;gap:16px}
+.ph-eye{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--g);font-family:var(--mn);margin-bottom:5px}
+.ph-title{font-family:var(--ser);font-size:25px;font-weight:500;color:var(--w);letter-spacing:.5px}
+.ph-sub{font-size:12px;color:var(--grey);margin-top:2px}
+.pg{padding:22px 30px 80px}
+
+/* ═══════════════════════════════════════════════════
+   SHARED COMPONENTS
+═══════════════════════════════════════════════════ */
+.slbl{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--grey2);font-family:var(--mn);margin:22px 0 12px;display:flex;align-items:center;gap:12px}
+.slbl::after{content:'';flex:1;height:1px;background:var(--ln)}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--ln);border:1px solid var(--ln);margin-bottom:22px}
+.sc{background:var(--s1);padding:16px 18px;position:relative;overflow:hidden}
+.sc::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--g),transparent);opacity:0;transition:.3s}
+.sc:hover::after{opacity:.4}
+.sv{font-family:var(--ser);font-size:28px;font-weight:600;color:var(--w);line-height:1}
+.sl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--grey2);font-family:var(--mn);margin-top:5px}
+.sm{font-size:11px;margin-top:5px;color:var(--grey2)}
+.sm.gld{color:var(--g)}.sm.win{color:var(--win)}
+.panel{background:var(--s1);border:1px solid var(--ln);margin-bottom:14px}
+.ph2{padding:13px 18px;border-bottom:1px solid var(--ln);display:flex;align-items:center;justify-content:space-between}
+.pt{font-size:12px;font-weight:600;color:var(--w)}
+.pb{padding:16px 18px}
+.how-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--ln);border:1px solid var(--ln);margin-bottom:22px}
+.hc{background:var(--s1);padding:20px 22px;position:relative}
+.hc::before{content:attr(data-n);position:absolute;top:14px;right:16px;font-family:var(--ser);font-size:48px;font-weight:300;color:rgba(196,162,74,0.08);line-height:1}
+.ht{font-size:12px;font-weight:600;color:var(--w);margin-bottom:5px}
+.hd{font-size:12px;color:var(--grey);line-height:1.6}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;font-size:9px;font-family:var(--mn);letter-spacing:.5px;border:1px solid}
+.bw{color:var(--win);border-color:var(--wln);background:var(--wdim)}
+.bg{color:var(--g);border-color:var(--gln);background:var(--gdim)}
+.bn{color:var(--grey);border-color:var(--ln2);background:var(--s2)}
+.notice{display:flex;gap:11px;align-items:flex-start;padding:11px 15px;border-left:2px solid var(--g);background:var(--gdim);margin-bottom:16px;font-size:12px;color:var(--grey);line-height:1.5}
+.notice strong{color:var(--w)}
+.ni2{color:var(--g);flex-shrink:0;margin-top:1px}
+.btn-gld{background:var(--g);color:var(--blk);border:none;padding:10px 20px;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;font-family:var(--mn);transition:.15s;position:relative;overflow:hidden}
+.btn-gld::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,0.2) 50%,transparent 70%);transform:translateX(-100%);transition:transform .5s}
+.btn-gld:hover::after{transform:translateX(100%)}
+.btn-gld:hover{background:var(--g2)}
+.btn-gld:disabled{opacity:.35;cursor:not-allowed}
+.btn-ghost{background:none;border:1px solid var(--ln2);color:var(--grey);padding:8px 16px;font-size:9px;font-family:var(--mn);letter-spacing:1.5px;text-transform:uppercase;transition:.12s}
+.btn-ghost:hover{border-color:var(--ln3);color:var(--w)}
+
+/* ═══════════════════════════════════════════════════
+   SEARCH / SCANNER
+═══════════════════════════════════════════════════ */
+.sbar{display:flex;border:1px solid var(--ln2);background:var(--s1);margin-bottom:5px;transition:border-color .2s}
+.sbar:focus-within{border-color:var(--g);box-shadow:0 0 0 3px rgba(196,162,74,0.07)}
+.sbar input{flex:1;background:transparent;border:none;padding:11px 15px;color:var(--w);font-size:13px;outline:none}
+.sbar input::placeholder{color:var(--grey2)}
+.sbar select{background:var(--s2);border:none;border-left:1px solid var(--ln2);padding:0 13px;color:var(--grey);font-size:12px;font-family:var(--mn);outline:none;min-width:132px}
+.sbar-btn{background:var(--g);color:var(--blk);border:none;padding:0 20px;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;font-family:var(--mn);transition:.15s;white-space:nowrap;position:relative;overflow:hidden}
+.sbar-btn::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,0.2) 50%,transparent 70%);transform:translateX(-100%);transition:.5s}
+.sbar-btn:hover::after{transform:translateX(100%)}
+.sbar-btn:hover{background:var(--g2)}
+.sbar-btn:disabled{opacity:.35;cursor:not-allowed}
+.cnote{font-size:10px;font-family:var(--mn);color:var(--grey2);margin-bottom:16px}
+.cnote span{color:var(--g)}
+.fbar{display:flex;align-items:center;gap:7px;margin-bottom:14px;flex-wrap:wrap}
+.fp{padding:4px 11px;border:1px solid var(--ln2);font-size:9px;font-family:var(--mn);letter-spacing:.5px;color:var(--grey);cursor:pointer;transition:.1s;user-select:none;background:var(--s1)}
+.fp:hover{border-color:var(--gln);color:var(--w)}
+.fp.on{border-color:var(--g);color:var(--g);background:var(--gdim)}
+.fsep{width:1px;height:14px;background:var(--ln2)}
+.flbl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--grey2);font-family:var(--mn)}
+/* ad table */
+.adt{width:100%;border-collapse:collapse;border:1px solid var(--ln)}
+.adt thead th{padding:9px 13px;text-align:left;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--grey2);font-family:var(--mn);font-weight:400;border-bottom:1px solid var(--ln);background:var(--s2);white-space:nowrap}
+.adr{border-bottom:1px solid var(--ln);cursor:pointer;transition:background .08s;background:var(--s1)}
+.adr:hover{background:var(--s2)}
+.adr.sel{background:rgba(196,162,74,0.05)}
+.adr.wr{border-left:2px solid rgba(61,184,122,0.3)}
+.adr.wr:hover{background:rgba(61,184,122,0.03)}
+.adr td{padding:12px 13px;vertical-align:middle}
+.chkb{width:14px;height:14px;border:1px solid var(--ln2);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--blk);transition:.1s;flex-shrink:0}
+.adr.sel .chkb{background:var(--g);border-color:var(--g)}
+.apn{font-size:13px;font-weight:600;color:var(--w);margin-bottom:3px}
+.ac{font-size:11px;color:var(--grey);line-height:1.5;max-width:360px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.dval{font-family:var(--mn);font-size:13px;font-weight:500}
+.dval.w{color:var(--win)}.dval.n{color:var(--g)}.dval.l{color:var(--grey)}
+/* dock */
+.dock{position:sticky;bottom:0;background:var(--s1);border-top:1px solid var(--gln);padding:12px 30px;display:flex;align-items:center;gap:12px;margin:0 -30px;animation:dockIn .25s cubic-bezier(.16,1,.3,1)}
+@keyframes dockIn{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.dock-lbl{font-size:11px;color:var(--grey);white-space:nowrap;min-width:150px}
+.dock-lbl strong{color:var(--w)}
+.dock-inp{flex:1;background:var(--s2);border:1px solid var(--ln2);color:var(--w);padding:9px 13px;font-size:13px;outline:none;transition:.15s}
+.dock-inp:focus{border-color:var(--g)}
+.dock-inp::placeholder{color:var(--grey2)}
+/* empty / loader */
+.empty{padding:56px 20px;text-align:center;border:1px solid var(--ln)}
+.eg{font-family:var(--ser);font-size:48px;color:rgba(196,162,74,0.15);margin-bottom:10px}
+.et{font-family:var(--ser);font-size:18px;font-weight:500;color:var(--w);margin-bottom:5px}
+.es{font-size:12px;color:var(--grey)}
+.ldr{padding:56px 20px;text-align:center}
+.lring{width:28px;height:28px;border:1px solid var(--ln2);border-top-color:var(--g);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ltxt{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--grey2);font-family:var(--mn)}
+.lsub{font-size:11px;color:var(--grey2);margin-top:7px}
+
+/* ═══════════════════════════════════════════════════
+   REPORT — DOCUMENT STYLE
+═══════════════════════════════════════════════════ */
+.report-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;
+  display:flex;align-items:flex-start;justify-content:center;
+  padding:20px;overflow-y:auto;
+  animation:fadeIn .25s ease;
+  backdrop-filter:blur(4px);
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.report-doc{
+  width:100%;max-width:820px;background:#FAFAF7;color:#111;
+  box-shadow:0 40px 120px rgba(0,0,0,.6);
+  margin-bottom:40px;
+  animation:docRise .35s cubic-bezier(.16,1,.3,1);
+  font-family:'DM Sans',sans-serif;
+}
+@keyframes docRise{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+/* doc header */
+.doc-header{background:#0A0A12;padding:36px 44px;position:relative;overflow:hidden}
+.doc-header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#C4A24A 30%,#C4A24A 70%,transparent)}
+.doc-brand{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.doc-brand-name{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;letter-spacing:5px;text-transform:uppercase;color:#F0F0EA}
+.doc-brand-name span{color:#C4A24A}
+.doc-brand-tag{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#4A4A58;font-family:'DM Mono',monospace}
+.doc-title{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:500;color:#F0F0EA;letter-spacing:.5px;margin-bottom:6px;line-height:1.2}
+.doc-meta{display:flex;gap:20px;flex-wrap:wrap}
+.doc-meta-item{font-size:10px;font-family:'DM Mono',monospace;color:#4A4A58;letter-spacing:.5px}
+.doc-meta-item span{color:#C4A24A}
+/* doc body */
+.doc-body{padding:40px 44px}
+/* section blocks */
+.doc-section{margin-bottom:36px}
+.doc-sec-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid #E0E0DA}
+.doc-sec-icon{font-size:18px;width:28px;text-align:center}
+.doc-sec-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:#0A0A12;letter-spacing:.3px}
+.doc-sec-body{font-size:13.5px;color:#333;line-height:1.75}
+/* hook cards */
+.hook-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+.hook-card{background:#F3F2EE;border:1px solid #E0E0DA;padding:14px 16px;border-left:3px solid #C4A24A}
+.hook-type{font-size:9px;letter-spacing:2px;text-transform:uppercase;font-family:'DM Mono',monospace;color:#C4A24A;margin-bottom:4px}
+.hook-text{font-size:12px;color:#444;line-height:1.55}
+/* repurposed ads */
+.ad-card-doc{background:#F8F7F3;border:1px solid #E0E0DA;padding:20px 22px;margin-bottom:12px;position:relative}
+.ad-card-doc::before{content:attr(data-n);position:absolute;top:14px;right:16px;font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:300;color:rgba(196,162,74,0.2)}
+.ad-num{font-size:9px;letter-spacing:2px;text-transform:uppercase;font-family:'DM Mono',monospace;color:#C4A24A;margin-bottom:8px}
+.ad-hook-lbl{font-size:11px;font-weight:600;color:#0A0A12;margin-bottom:4px}
+.ad-copy-doc{font-size:13px;color:#333;line-height:1.65;margin-bottom:10px}
+.ad-cta-doc{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-family:'DM Mono',monospace;letter-spacing:1.5px;text-transform:uppercase;color:#888;border-top:1px solid #E0E0DA;padding-top:10px;width:100%}
+.ad-cta-doc span{color:#C4A24A}
+/* recs */
+.rec-item{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid #EEEEE9}
+.rec-item:last-child{border-bottom:none}
+.rec-num{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;color:rgba(196,162,74,0.5);flex-shrink:0;line-height:1;margin-top:2px;width:24px}
+.rec-text{font-size:13px;color:#333;line-height:1.6}
+/* competitive table */
+.comp-table{width:100%;border-collapse:collapse;font-size:12px}
+.comp-table th{text-align:left;padding:8px 12px;background:#F0EFE9;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;font-family:'DM Mono',monospace;color:#888;border-bottom:1px solid #E0E0DA}
+.comp-table td{padding:10px 12px;border-bottom:1px solid #EEEEE9;color:#333;vertical-align:top}
+.comp-table tr:last-child td{border-bottom:none}
+/* doc footer */
+.doc-footer{background:#F0EFE9;padding:22px 44px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid #E0E0DA}
+.doc-footer-brand{font-size:10px;font-family:'DM Mono',monospace;color:#888;letter-spacing:1px}
+.doc-footer-brand strong{color:#0A0A12}
+.doc-footer-date{font-size:10px;font-family:'DM Mono',monospace;color:#888}
+/* report actions bar */
+.report-actions{position:sticky;bottom:0;background:var(--s1);border-top:1px solid var(--gln);padding:12px 30px;display:flex;align-items:center;justify-content:space-between;gap:12px;animation:dockIn .25s ease}
+.raw-toggle{font-size:11px;color:var(--grey);cursor:pointer;font-family:var(--mn);letter-spacing:.5px;text-decoration:underline;text-decoration-color:var(--ln2)}
+.raw-toggle:hover{color:var(--g)}
+
+/* print styles */
+@media print{
+  .shell,.sidebar,.report-actions,.report-overlay::before{display:none!important}
+  .report-overlay{position:static;padding:0;background:white;overflow:visible}
+  .report-doc{box-shadow:none;max-width:100%}
+  body{background:white;overflow:visible}
+  html{overflow:visible}
+}
+
+/* ═══════════════════════════════════════════════════
+   SETTINGS
+═══════════════════════════════════════════════════ */
+.ss{background:var(--s1);border:1px solid var(--ln);margin-bottom:12px}
+.ss-h{padding:14px 18px;border-bottom:1px solid var(--ln);display:flex;align-items:center;justify-content:space-between}
+.ss-t{font-size:12px;font-weight:600;color:var(--w)}
+.ss-bdg{font-size:9px;font-family:var(--mn);letter-spacing:1px;padding:2px 8px;border:1px solid var(--gln);color:var(--g)}
+.ss-b{padding:18px}
+.ss-desc{font-size:12px;color:var(--grey);line-height:1.6;margin-bottom:14px}
+.ss-code{font-family:var(--mn);font-size:11px;color:var(--g);background:var(--gdim);padding:1px 6px}
+.akin{width:100%;background:var(--s2);border:1px solid var(--ln2);color:var(--w);padding:10px 13px;font-size:12px;font-family:var(--mn);outline:none;transition:.15s}
+.akin:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(196,162,74,0.07)}
+.akin::placeholder{color:var(--grey2)}
+.rbtns{display:flex;align-items:center;gap:10px;margin-top:11px}
+.sbtn{background:var(--g);color:var(--blk);border:none;padding:9px 18px;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;font-family:var(--mn);transition:.15s}
+.sbtn:hover{background:var(--g2)}
+.svd{font-size:11px;font-family:var(--mn);color:var(--win)}
+.utbl{width:100%;border-collapse:collapse}
+.utbl th{text-align:left;font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:8px 11px;border-bottom:1px solid var(--ln);color:var(--grey2);font-family:var(--mn);font-weight:400}
+.utbl td{padding:10px 11px;border-bottom:1px solid var(--ln);font-size:12px;color:var(--grey)}
+.utbl td:first-child{color:var(--w);font-weight:500}
+.mn{font-family:var(--mn);font-size:11px}
+.rpill{font-size:9px;font-family:var(--mn);letter-spacing:1px;padding:2px 8px;border:1px solid var(--gln);color:var(--g)}
+.ind-grid{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+.ti{width:80px;background:var(--s2);border:1px solid var(--ln2);color:var(--w);padding:7px 10px;font-size:12px;font-family:var(--mn);outline:none;text-align:center}
+.ti:focus{border-color:var(--g)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// ──────────────────────────────────────────────────────────
+// CONFIG — add your Anthropic key here before sharing
+// ──────────────────────────────────────────────────────────
+const ANTHROPIC_KEY = "YOUR_ANTHROPIC_KEY_HERE"; // sk-ant-...
+
+const APPROVED = [
+  {email:"samuel@virtuecore.com", password:"VC2025!",  tokens:200, name:"Samuel", admin:true},
+  {email:"caleb@virtuecore.com",  password:"VC2025!",  tokens:200, name:"Caleb",  admin:true},
+  {email:"demo@virtuecore.com",   password:"Demo123!", tokens:50,  name:"Demo",   admin:false},
+];
+const COSTS = {search:10, analysis:25};
+
+const IND = {
+  "Service Business":90,"High-Ticket Offer":90,"E-Commerce":60,
+  "SaaS / Software":90,"Travel & Events":60,"Local Business":45,"Custom":90,
+};
+
+// ──────────────────────────────────────────────────────────
+// STATE
+// ──────────────────────────────────────────────────────────
+let S = {
+  view:"login", user:null, tokens:0, startTokens:0,
+  ads:[], selAds:[], analysisRaw:"", analysisData:null, analysisLoading:false,
+  metaToken:"", saved:false,
+  clientBiz:"", loginEmail:"", loginPass:"", loginErr:"",
+  searchQuery:"", country:"GB", searchLoading:false,
+  industry:"Service Business", customDays:90,
+  filterFormat:"All", filterPlatform:"All",
+  showReport:false, showRaw:false,
+};
+const wd = () => S.industry==="Custom" ? parseInt(S.customDays)||90 : IND[S.industry]||90;
+const isWin = a => a.days >= wd();
+function set(p){Object.assign(S,p);render()}
+
+// ──────────────────────────────────────────────────────────
+// MOCK ADS
+// ──────────────────────────────────────────────────────────
+function mockAds(q){
+  const n=q||"Marketing";
+  return[
+    {id:1,page:`${n} Pro Agency`,body:`Still struggling with inconsistent leads from your ${n} strategy? We've helped 500+ service businesses build reliable pipelines. Book a free 20-min call.`,days:112,spend:"£2–5k/mo",format:"Video",cta:"Book Free Call",hook:"Problem-Aware",headline:"Stop Losing Leads",targeting:"Business owners 30-55",platforms:["FB","IG"]},
+    {id:2,page:`Elite ${n} Co`,body:`"I wish I'd found them 2 years ago." — James M. 200+ business owners call us the last agency they ever hire. Results guaranteed or you don't pay.`,days:134,spend:"£5–10k/mo",format:"Video",cta:"See Results",hook:"Social Proof",headline:"Guaranteed Results",targeting:"Service business owners",platforms:["FB","IG","AN"]},
+    {id:3,page:`${n} Masters UK`,body:`Our ${n} growth system is now FREE when you book a consultation this week. We only take 5 clients per month — 2 spots remaining.`,days:98,spend:"£1–3k/mo",format:"Carousel",cta:"Claim Free System",hook:"Urgency / Scarcity",headline:"Free Growth System",targeting:"SME owners UK",platforms:["FB"]},
+    {id:4,page:`The ${n} Group`,body:`Don't hire another ${n} agency until you read this. Most charge £3–5k/month for average results. We're performance-based — pay only when we deliver.`,days:156,spend:"£10–20k/mo",format:"Video",cta:"See How It Works",hook:"Competitor Contrast",headline:"Only Pay For Results",targeting:"Agency-aware business owners",platforms:["FB","IG"]},
+    {id:5,page:`${n} Growth Hub`,body:`How we generated £180k in new business for a local ${n} company in 90 days. Full case study — no optin, free to read.`,days:67,spend:"£500–1k/mo",format:"Image",cta:"Read Case Study",hook:"Proof / Numbers",headline:"£180k in 90 Days",targeting:"Local business owners",platforms:["IG"]},
+    {id:6,page:`Smart ${n} Solutions`,body:`2025 is the year UK service businesses finally crack lead generation. Here's the ${n} playbook our top clients use — sharing it this week.`,days:103,spend:"£3–7k/mo",format:"Image",cta:"Get the Playbook",hook:"Year / Trend",headline:"The 2025 Playbook",targeting:"Growth-minded SME",platforms:["FB","IG"]},
+    {id:7,page:`${n} Accelerator`,body:`This one shift in our ${n} approach increased client revenue 340% in 6 months. Most business owners never do this. Watch the 3-minute breakdown.`,days:88,spend:"£2–4k/mo",format:"Video",cta:"Watch Now",hook:"Curiosity / Pattern Interrupt",headline:"340% Revenue Increase",targeting:"Scaling business owners",platforms:["FB","IG"]},
+    {id:8,page:`Premium ${n} Partners`,body:`We turned down 12 clients last month — not because we were full, but because they weren't ready for the growth we deliver. Are you?`,days:121,spend:"£7–15k/mo",format:"Image",cta:"Take the Audit",hook:"Reverse Psychology",headline:"Are You Ready?",targeting:"Premium B2B buyers",platforms:["FB"]},
+    {id:9,page:`${n} Direct`,body:`Warning: most ${n} advice you're getting is already 3 years out of date. Here's what's actually working in 2025 for UK service businesses.`,days:34,spend:"£300–700/mo",format:"Video",cta:"Watch Free Training",hook:"Warning / Contrarian",headline:"Outdated Advice Alert",targeting:"Frustrated business owners",platforms:["FB","IG"]},
+    {id:10,page:`The ${n} Formula`,body:`From £0 to £47k in 90 days. The exact ${n} formula — no hype, step-by-step breakdown you can apply today.`,days:71,spend:"£1–2k/mo",format:"Carousel",cta:"Get the Formula",hook:"Income / Results Proof",headline:"£47k in 90 Days",targeting:"Aspiring business owners",platforms:["FB"]},
+  ];
+}
+
+// ──────────────────────────────────────────────────────────
+// FETCH ADS
+// ──────────────────────────────────────────────────────────
+async function fetchAds(){
+  if(!S.searchQuery.trim()){alert("Enter a niche or keyword.");return;}
+  if(S.tokens<COSTS.search){alert(`Not enough tokens.`);return;}
+  set({searchLoading:true,ads:[],selAds:[]});
+  let ads=[];
+  if(S.metaToken){
+    try{
+      const f="id,ad_creative_bodies,page_name,ad_delivery_start_time,publisher_platforms,spend,ad_creative_link_titles";
+      const url=`https://graph.facebook.com/v19.0/ads_archive?search_terms=${encodeURIComponent(S.searchQuery)}&ad_reached_countries=["${S.country}"]&fields=${f}&access_token=${S.metaToken}&limit=20&ad_active_status=ACTIVE`;
+      const r=await fetch(url);const d=await r.json();
+      if(d.data?.length){ads=d.data.map((a,i)=>({id:a.id||i,page:a.page_name||"Unknown",body:(a.ad_creative_bodies||["No copy"])[0],days:a.ad_delivery_start_time?Math.floor((Date.now()-new Date(a.ad_delivery_start_time))/86400000):0,spend:a.spend?`£${a.spend.lower_bound}–${a.spend.upper_bound}`:"—",format:"Live",cta:(a.ad_creative_link_titles||["—"])[0],hook:"Live",headline:"Live Ad",targeting:"Live",platforms:(a.publisher_platforms||[]).map(p=>p.toUpperCase())}));}
+    }catch(e){}
+  }
+  if(!ads.length) ads=mockAds(S.searchQuery);
+  set({ads,tokens:S.tokens-COSTS.search,searchLoading:false});
+}
+
+// ──────────────────────────────────────────────────────────
+// ANALYSIS
+// ──────────────────────────────────────────────────────────
+async function analyse(){
+  const apiKey = ANTHROPIC_KEY !== "YOUR_ANTHROPIC_KEY_HERE" ? ANTHROPIC_KEY : null;
+  if(!apiKey){alert("API key not configured. Open the HTML file in a text editor and replace YOUR_ANTHROPIC_KEY_HERE with your Anthropic API key.");return;}
+  if(S.tokens<COSTS.analysis){alert(`Not enough tokens.`);return;}
+  const ads=S.selAds, client=S.clientBiz||"the client", threshold=wd();
+  set({analysisLoading:true,analysisRaw:"",analysisData:null,showReport:false,tokens:S.tokens-COSTS.analysis});
+
+  const adSum=ads.map((a,i)=>`AD ${i+1} — "${a.page}"
+  Headline: ${a.headline}
+  Hook Type: ${a.hook}
+  Copy: ${a.body}
+  CTA: "${a.cta}" | Format: ${a.format} | Platforms: ${a.platforms.join(",")}
+  Days Active: ${a.days}${a.days>=threshold?" ← WINNING (3+ months)":""}
+  Targeting: ${a.targeting}`).join("\n\n");
+
+  const winAds=ads.filter(a=>isWin(a));
+
+  const prompt=`You are a senior Meta ads strategist at VirtueCore, a UK marketing agency. Produce a competitive intelligence report for: "${client}" (Industry: ${S.industry}).
+
+FRAMEWORK: Identify ads running 3+ months (${threshold}+ days) — these are profitable. Study angles, offers, headlines, copy length, and targeting signals.
+
+WINNING ADS IN THIS DATASET: ${winAds.length} of ${ads.length} have run 3+ months.
+
+AD DATA:
+${adSum}
+
+Return ONLY valid JSON (no markdown, no preamble):
+{
+  "landscape": "2–3 sentence overview of competitive landscape and positioning gaps",
+  "winningAds": [
+    {"page":"name","days":0,"hook":"type","headline":"headline","angle":"what angle/positioning they're using","offer":"what they're offering and how","copyLength":"short/medium/long","targeting":"inferred audience","whyWorking":"why this ad has lasted 3+ months"}
+  ],
+  "hookPatterns": [
+    {"type":"hook name","frequency":"X of ${ads.length} ads","description":"why this trigger works in this market"}
+  ],
+  "offerPatterns": "2–3 sentences on how competitors structure offers, risk reversal, pricing",
+  "copyInsights": "2–3 sentences on copy length, style, and what's working",
+  "targetingInsights": "2–3 sentences on inferred targeting patterns and audience signals",
+  "creativeFormats": "2–3 sentences on what formats dominate and why",
+  "repurposedAds": [
+    {"hookType":"type","headline":"headline for ${client}","hook":"opening line","body":"2–4 sentence body copy for ${client}","cta":"call to action"},
+    {"hookType":"type","headline":"headline for ${client}","hook":"opening line","body":"2–4 sentence body copy for ${client}","cta":"call to action"},
+    {"hookType":"type","headline":"headline for ${client}","hook":"opening line","body":"2–4 sentence body copy for ${client}","cta":"call to action"}
+  ],
+  "recommendations": [
+    "Specific recommendation 1 for ${client}",
+    "Specific recommendation 2 for ${client}",
+    "Specific recommendation 3 for ${client}",
+    "Specific recommendation 4 for ${client}",
+    "Specific recommendation 5 for ${client}"
+  ],
+  "opportunityGap": "1–2 sentences on the biggest positioning gap ${client} can exploit"
+}`;
+
+  try{
+    const r=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:4000,messages:[{role:"user",content:prompt}]})
+    });
+    const d=await r.json();
+    if(d.error){set({analysisRaw:`Error: ${d.error.message}`,analysisLoading:false,showReport:true});return;}
+    const raw=d.content?.map(b=>b.text||"").join("")||"";
+    let parsed=null;
+    try{const clean=raw.replace(/```json|```/g,"").trim();parsed=JSON.parse(clean);}catch(e){parsed=null;}
+    set({analysisRaw:raw,analysisData:parsed,analysisLoading:false,showReport:true});
+  }catch(e){
+    set({analysisRaw:`Connection error: ${e.message}`,analysisLoading:false,showReport:true});
+  }
+}
+
+// ──────────────────────────────────────────────────────────
+// RENDER ENGINE
+// ──────────────────────────────────────────────────────────
+function render(){
+  const app=document.getElementById("app");
+  if(!S.user){app.innerHTML=rLogin();bindLogin();return;}
+  app.innerHTML=rShell();
+  if(S.showReport) app.innerHTML+=rReport();
+  bindShell();
+}
+
+// LOGIN
+function rLogin(){return`
+<div class="login-scene">
+  <div class="grid-h"></div><div class="grid-v"></div>
+  <div class="login-glow"></div>
+  <div class="corner corner-tl"></div><div class="corner corner-tr"></div>
+  <div class="corner corner-bl"></div><div class="corner corner-br"></div>
+  <div class="login-card">
+    <div class="lm-wrap">
+      <div class="lm">ADINT<span>.</span></div>
+      <div class="lm-line"></div>
+      <div class="lm-sub">Competitor Ad Intelligence · VirtueCore</div>
+    </div>
+    <div class="lf"><label>Email Address</label><input class="lfi" type="email" id="le" placeholder="you@virtuecore.com" value="${S.loginEmail}"/></div>
+    <div class="lf"><label>Password</label><input class="lfi" type="password" id="lp" placeholder="••••••••" value="${S.loginPass}"/></div>
+    ${S.loginErr?`<div class="lerr">${S.loginErr}</div>`:""}
+    <div class="lbtn-wrap"><button class="lbtn" id="lbtn">Enter Platform</button></div>
+    <p class="l-note">Invitation only · <a href="mailto:hello@virtuecore.com">Request access</a></p>
+  </div>
+</div>`;}
+function bindLogin(){
+  const le=document.getElementById("le"),lp=document.getElementById("lp");
+  le.oninput=e=>S.loginEmail=e.target.value;
+  lp.oninput=e=>S.loginPass=e.target.value;
+  lp.onkeydown=e=>{if(e.key==="Enter")doLogin()};
+  document.getElementById("lbtn").onclick=doLogin;
+  le.focus();
+}
+function doLogin(){
+  const u=APPROVED.find(a=>a.email.toLowerCase()===S.loginEmail.toLowerCase()&&a.password===S.loginPass);
+  if(u)set({user:u,tokens:u.tokens,startTokens:u.tokens,view:"dashboard",loginErr:""});
+  else set({loginErr:"Invalid credentials. Access is by invitation only."});
+}
+
+// SHELL
+function rShell(){
+  const pct=S.startTokens?Math.round((S.tokens/S.startTokens)*100):0;
+  const fc=pct<=20?"crit":pct<=50?"low":"";
+  const an=["analysis","report"].includes(S.view)?"search":S.view;
+  const navs=[{id:"dashboard",icon:"◈",label:"Dashboard"},{id:"search",icon:"⌕",label:"Ad Scanner"},{id:"settings",icon:"◎",label:"Settings"}];
+  return`
+<div class="shell">
+  <div class="sb">
+    <div class="sb-head"><div class="sb-wm">ADINT<span>.</span></div><div class="sb-sub">by VirtueCore</div></div>
+    <div class="sb-nav">
+      <div class="sb-lbl">Navigation</div>
+      ${navs.map(n=>`<div class="ni${an===n.id?" active":""}" data-nav="${n.id}"><span class="ni-ic">${n.icon}</span>${n.label}</div>`).join("")}
+    </div>
+    <div style="flex:1"></div>
+    <div class="tw">
+      <div class="tw-top"><span class="tw-lbl">Tokens</span><span class="tw-pct">${pct}%</span></div>
+      <div class="tw-num">${S.tokens}</div>
+      <div class="tw-of">of ${S.startTokens} allocated</div>
+      <div class="tw-track"><div class="tw-fill ${fc}" style="width:${pct}%"></div></div>
+    </div>
+    <div class="uw"><div class="av">${S.user.name[0]}</div><div><div class="un">${S.user.name}</div><div class="ur">${S.user.admin?"Admin":"Viewer"}</div></div></div>
+    <button class="so" id="so">↩ Sign out</button>
+  </div>
+  <div class="main"><div class="pg-enter">${rView()}</div></div>
+</div>`;}
+function rView(){if(S.view==="dashboard")return rDb();if(S.view==="search")return rSearch();if(S.view==="settings")return rSettings();return rDb();}
+
+// DASHBOARD
+function rDb(){
+  const w=S.ads.filter(a=>isWin(a)).length;
+  return`
+<div class="ph"><div><div class="ph-eye">Overview</div><div class="ph-title">Welcome back, ${S.user.name}.</div><div class="ph-sub">Your competitor intelligence platform.</div></div></div>
+<div class="pg">
+  <div class="stats-row">
+    <div class="sc"><div class="sv">${S.tokens}</div><div class="sl">Tokens Left</div><div class="sm">Scan ${COSTS.search} · Report ${COSTS.analysis}</div></div>
+    <div class="sc"><div class="sv">${S.ads.length}</div><div class="sl">Ads Scanned</div><div class="sm win">${w} winning (3+ months)</div></div>
+    <div class="sc"><div class="sv">${S.selAds.length}</div><div class="sl">Selected</div><div class="sm gld" style="cursor:${S.selAds.length?"pointer":"default"}" id="dgo">${S.selAds.length?"Generate report →":"Select ads in scanner"}</div></div>
+    <div class="sc"><div class="sv">${wd()}d</div><div class="sl">Win Threshold</div><div class="sm">${S.industry}</div></div>
+  </div>
+  <div class="slbl">Framework</div>
+  <div class="how-grid">
+    <div class="hc" data-n="01"><div class="ht">Scan the Meta Ad Library</div><div class="hd">Enter any niche. ADINT pulls active competitor ads and flags any running <strong style="color:var(--g)">${wd()}+ days</strong> — the 3-month mark that signals a profitable, tested ad.</div></div>
+    <div class="hc" data-n="02"><div class="ht">Study Angles & Offers</div><div class="hd">Analyse what angles competitors are leading with, how they frame their offers, headline patterns, copy length, and inferred targeting — the full competitive picture.</div></div>
+    <div class="hc" data-n="03"><div class="ht">Generate Intelligence Report</div><div class="hd">AI analyses the winning ads and writes repurposed copy adapted for your client — with hook patterns, offer insights, and 5 strategic recommendations.</div></div>
+    <div class="hc" data-n="04"><div class="ht">Download & Deploy</div><div class="hd">Export a premium formatted PDF report to share with clients or use internally. Take the repurposed ads straight to Canva, then launch via Meta Business Manager.</div></div>
+  </div>
+  <div class="panel"><div class="ph2"><div class="pt">Ready to begin?</div><button class="btn-gld" id="gscan" style="padding:9px 20px;font-size:10px;letter-spacing:2px">Open Ad Scanner</button></div><div class="pb"><p style="font-size:12px;color:var(--grey);line-height:1.6">Ads running <strong style="color:var(--w)">${wd()}+ days</strong> are flagged as winning for <strong style="color:var(--w)">${S.industry}</strong>. Change threshold in Settings.</p></div></div>
+</div>`;}
+
+// SEARCH
+function rSearch(){
+  const ads=S.ads.filter(a=>S.filterFormat==="All"||a.format===S.filterFormat).filter(a=>S.filterPlatform==="All"||a.platforms.includes(S.filterPlatform)).sort((a,b)=>b.days-a.days);
+  const w=ads.filter(a=>isWin(a)).length;
+  const fmts=["All",...new Set(S.ads.map(a=>a.format))];
+  const plats=["All","FB","IG","AN"];
+  return`
+<div class="ph"><div><div class="ph-eye">Competitive Intelligence</div><div class="ph-title">Ad Scanner</div><div class="ph-sub">Winning = ${wd()}+ days running · ${S.industry}</div></div></div>
+<div class="pg">
+  ${!S.metaToken?`<div class="notice"><span class="ni2">⚠</span><div>Running in <strong>Demo Mode</strong> — realistic mock data. Add your Meta Graph API token in Settings to pull live ads.</div></div>`:""}
+  <div class="sbar">
+    <input id="sq" type="text" placeholder="Enter niche or keyword — e.g. Wedding Videography, Travel Packages, Solar…" value="${S.searchQuery}"/>
+    <select id="sc">${[["GB","🇬🇧 United Kingdom"],["US","🇺🇸 United States"],["AU","🇦🇺 Australia"],["CA","🇨🇦 Canada"],["IE","🇮🇪 Ireland"]].map(([c,l])=>`<option value="${c}"${S.country===c?" selected":""}>${l}</option>`).join("")}</select>
+    <button class="sbar-btn" id="sbtn" ${S.searchLoading||S.tokens<COSTS.search?"disabled":""}>${S.searchLoading?"Scanning…":"Scan Ads"}</button>
+  </div>
+  <div class="cnote">${COSTS.search} tokens per scan · <span>${S.tokens} remaining</span></div>
+  ${S.ads.length?`
+  <div class="fbar">
+    <span class="flbl">Format:</span>${fmts.map(f=>`<span class="fp${S.filterFormat===f?" on":""}" data-fmt="${f}">${f}</span>`).join("")}
+    <span class="fsep"></span>
+    <span class="flbl">Platform:</span>${plats.map(p=>`<span class="fp${S.filterPlatform===p?" on":""}" data-plat="${p}">${p}</span>`).join("")}
+    <span class="fsep"></span>
+    <span style="font-size:9px;font-family:var(--mn);color:var(--grey2)">${ads.length} results · <span style="color:var(--win)">${w} winning</span></span>
+  </div>
+  <table class="adt">
+    <thead><tr><th style="width:30px"></th><th>Advertiser</th><th>Headline</th><th>Copy Preview</th><th>Hook</th><th>Format</th><th>Days</th></tr></thead>
+    <tbody>${ads.map(a=>{
+      const sel=S.selAds.find(s=>s.id===a.id);const win=isWin(a);
+      const dc=win?"w":a.days>=(wd()*.6)?"n":"l";
+      return`<tr class="adr${sel?" sel":""}${win?" wr":""}" data-id="${a.id}">
+        <td><div class="chkb">${sel?"✓":""}</div></td>
+        <td><div class="apn">${a.page}</div>${win?`<div style="margin-top:3px"><span class="badge bw">✦ 3+ months</span></div>`:""}</td>
+        <td style="font-size:12px;font-weight:600;color:var(--w);max-width:140px">${a.headline}</td>
+        <td><div class="ac">${a.body}</div></td>
+        <td><span class="badge bg">${a.hook}</span></td>
+        <td><span class="badge bn">${a.format}</span></td>
+        <td><span class="dval ${dc}">${a.days}d</span></td>
+      </tr>`;}).join("")}
+    </tbody>
+  </table>
+  ${S.selAds.length?`
+  <div class="dock">
+    <div class="dock-lbl"><strong>${S.selAds.length}</strong> ads selected · ${COSTS.analysis} tokens</div>
+    <input class="dock-inp" id="cb" placeholder="Client business name (e.g. VIST Wedding Films, Your Travel Community…)" value="${S.clientBiz}"/>
+    <button class="btn-gld" id="abtn" style="padding:10px 22px;font-size:10px;letter-spacing:2px" ${S.tokens<COSTS.analysis?"disabled":""}>Generate Report →</button>
+  </div>`:""}
+  `:S.searchLoading?`<div class="ldr"><div class="lring"></div><div class="ltxt">Scanning Ad Library</div></div>`:`
+  <div class="empty"><div class="eg">⌕</div><div class="et">Enter a niche to begin scanning</div><div class="es">Try "wedding videography", "solar panels", "travel packages"</div></div>`}
+</div>
+${S.analysisLoading?`<div class="report-overlay" style="align-items:center;justify-content:center"><div class="ldr" style="background:var(--s1);border:1px solid var(--ln);padding:50px 60px"><div class="lring"></div><div class="ltxt">Generating Intelligence Report</div><div class="lsub">Analysing winning ads · Mapping frameworks · Writing repurposed copy</div></div></div>`:""}
+`;}
+
+// SETTINGS
+function rSettings(){return`
+<div class="ph"><div><div class="ph-eye">Configuration</div><div class="ph-title">Settings</div><div class="ph-sub">API tokens, access control, and winning ad thresholds</div></div></div>
+<div class="pg">
+  <div class="slbl">Meta Ad Library</div>
+  <div class="ss"><div class="ss-h"><div class="ss-t">Meta Graph API Token</div><span class="ss-bdg">${S.metaToken?"● CONNECTED":"○ DEMO MODE"}</span></div>
+  <div class="ss-b"><div class="ss-desc">Add your Meta Graph API access token to pull live competitor ads. Without it ADINT uses demo data.<br><br>Get at <span class="ss-code">developers.facebook.com → Graph API Explorer</span> · Requires <span class="ss-code">ads_read</span></div>
+  <input class="akin" id="mt" type="password" placeholder="EAAxxxxxxxx…" value="${S.metaToken}"/>
+  <div class="rbtns"><button class="sbtn" id="smt">Save Token</button>${S.saved?`<span class="svd">✓ Saved</span>`:""}</div></div></div>
+
+  <div class="slbl">Winning Ad Threshold</div>
+  <div class="ss"><div class="ss-h"><div class="ss-t">Industry Threshold</div><span class="ss-bdg">CURRENTLY ${wd()} DAYS</span></div>
+  <div class="ss-b">
+    <div class="ss-desc">An ad running ${wd()}+ days signals it's profitable — the advertiser is still spending because it converts. Per the VirtueCore framework: 3+ months = winning.</div>
+    <div class="ind-grid">${Object.keys(IND).map(k=>`<span class="fp${S.industry===k?" on":""}" data-ind="${k}" style="font-size:9px">${k} <span style="opacity:.55">(${IND[k]}d)</span></span>`).join("")}</div>
+    ${S.industry==="Custom"?`<div style="display:flex;align-items:center;gap:10px;margin-top:12px"><label style="font-size:9px;font-family:var(--mn);letter-spacing:1px;text-transform:uppercase;color:var(--grey2);min-width:110px">Min Days</label><input class="ti" id="cd" type="number" min="7" max="180" value="${S.customDays}"/></div>`:""}
+  </div></div>
+
+  ${S.user?.admin?`
+  <div class="slbl">Access Management</div>
+  <div class="ss"><div class="ss-h"><div class="ss-t">Approved Users</div><span class="ss-bdg">${APPROVED.length} USERS</span></div>
+  <div class="ss-b"><div class="ss-desc">Only these users can log in. In production connects to Supabase — add users there without editing code.</div>
+  <table class="utbl"><thead><tr><th>Name</th><th>Email</th><th>Tokens</th><th>Role</th></tr></thead>
+  <tbody>${APPROVED.map(a=>`<tr><td>${a.name}</td><td><span class="mn">${a.email}</span></td><td><span class="mn">${a.tokens}</span></td><td><span class="rpill">${a.admin?"Admin":"Viewer"}</span></td></tr>`).join("")}</tbody></table>
+  </div></div>
+  <div class="ss"><div class="ss-h"><div class="ss-t">AI Engine</div><span class="ss-bdg">CONFIGURED</span></div>
+  <div class="ss-b"><div class="ss-desc" style="margin:0">The intelligence engine is configured at the platform level. No configuration required — simply use the Ad Scanner to generate reports.</div></div></div>
+  `:""}
+</div>`;}
+
+// ──────────────────────────────────────────────────────────
+// REPORT DOCUMENT
+// ──────────────────────────────────────────────────────────
+function rReport(){
+  const d=S.analysisData;
+  const date=new Date().toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"});
+  const winAds=(d?.winningAds||[]);
+
+  if(!d){
+    // fallback: raw text in nice wrapper
+    return`<div class="report-overlay" id="rep-overlay">
+    <div style="width:100%;max-width:820px;margin-bottom:40px">
+      <div class="report-actions"><span style="font-size:12px;color:var(--grey)">Intelligence Report</span><div style="display:flex;gap:10px"><button class="btn-ghost" id="close-rep">✕ Close</button></div></div>
+      <div class="report-doc"><div class="doc-header"><div class="doc-brand"><div class="doc-brand-name">ADINT<span>.</span></div><div class="doc-brand-tag">by VirtueCore</div></div><div class="doc-title">${S.clientBiz||"Intelligence Report"}</div></div>
+      <div class="doc-body"><pre style="white-space:pre-wrap;font-size:13px;line-height:1.75;color:#333;font-family:'DM Sans',sans-serif">${S.analysisRaw}</pre></div></div></div></div>`;
+  }
+
+  return`<div class="report-overlay" id="rep-overlay">
+  <div style="width:100%;max-width:820px;margin-bottom:40px">
+    <div class="report-actions">
+      <div style="font-size:12px;color:var(--grey)">${S.selAds.length} ads analysed for <strong style="color:var(--w)">${S.clientBiz||"your client"}</strong></div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <span class="raw-toggle" id="raw-tog">${S.showRaw?"Show formatted":"Show raw"}</span>
+        <button class="btn-gld" style="padding:9px 18px;font-size:10px;letter-spacing:1.5px" onclick="window.print()">⬇ Download PDF</button>
+        <button class="btn-ghost" id="close-rep">✕ Close</button>
+      </div>
+    </div>
+
+    <div class="report-doc" id="report-doc-inner">
+      <!-- HEADER -->
+      <div class="doc-header">
+        <div class="doc-brand">
+          <div class="doc-brand-name">ADINT<span>.</span></div>
+          <div class="doc-brand-tag">Competitor Intelligence · by VirtueCore</div>
+        </div>
+        <div class="doc-title">${S.clientBiz||"Intelligence Report"}</div>
+        <div class="doc-meta">
+          <div class="doc-meta-item">Industry: <span>${S.industry}</span></div>
+          <div class="doc-meta-item">Win Threshold: <span>${wd()}+ days (3 months)</span></div>
+          <div class="doc-meta-item">Ads Analysed: <span>${S.selAds.length}</span></div>
+          <div class="doc-meta-item">Winning Ads: <span>${winAds.length}</span></div>
+          <div class="doc-meta-item">Prepared: <span>${date}</span></div>
+        </div>
+      </div>
+
+      <div class="doc-body">
+        <!-- LANDSCAPE -->
+        <div class="doc-section">
+          <div class="doc-sec-header">
+            <div class="doc-sec-icon">🎯</div>
+            <div class="doc-sec-title">Competitive Landscape</div>
+          </div>
+          <div class="doc-sec-body">${d.landscape||""}</div>
+          ${d.opportunityGap?`<div style="background:#F3F2EE;border-left:3px solid #C4A24A;padding:12px 16px;margin-top:14px;font-size:13px;color:#333;line-height:1.6"><strong style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;font-family:'DM Mono',monospace;color:#C4A24A;display:block;margin-bottom:5px">Opportunity Gap</strong>${d.opportunityGap}</div>`:""}
+        </div>
+
+        <!-- WINNING ADS TABLE -->
+        ${winAds.length?`
+        <div class="doc-section">
+          <div class="doc-sec-header">
+            <div class="doc-sec-icon">✦</div>
+            <div class="doc-sec-title">Winning Ads Analysis (3+ Months)</div>
+          </div>
+          <table class="comp-table">
+            <thead><tr><th>Advertiser</th><th>Headline</th><th>Angle</th><th>Offer</th><th>Days</th></tr></thead>
+            <tbody>${winAds.map(a=>`<tr>
+              <td style="font-weight:600;color:#111">${a.page}</td>
+              <td style="font-style:italic">"${a.headline}"</td>
+              <td>${a.angle}</td>
+              <td>${a.offer}</td>
+              <td style="font-family:'DM Mono',monospace;color:#C4A24A;white-space:nowrap">${a.days}d</td>
+            </tr>`).join("")}
+            </tbody>
+          </table>
+          ${winAds.some(a=>a.whyWorking)?`<div style="margin-top:14px">${winAds.filter(a=>a.whyWorking).map(a=>`<div style="padding:10px 0;border-bottom:1px solid #EEEEE9"><span style="font-size:10px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:1px;color:#C4A24A">${a.page}</span><p style="font-size:12px;color:#444;margin-top:4px;line-height:1.55">${a.whyWorking}</p></div>`).join("")}</div>`:""}
+        </div>`:""}
+
+        <!-- HOOK PATTERNS -->
+        ${d.hookPatterns?.length?`
+        <div class="doc-section">
+          <div class="doc-sec-header">
+            <div class="doc-sec-icon">🪝</div>
+            <div class="doc-sec-title">Hook Patterns</div>
+          </div>
+          <div class="hook-grid">${d.hookPatterns.map(h=>`
+            <div class="hook-card">
+              <div class="hook-type">${h.type} · ${h.frequency}</div>
+              <div class="hook-text">${h.description}</div>
+            </div>`).join("")}
+          </div>
+        </div>`:""}
+
+        <!-- OFFER, COPY, TARGETING, CREATIVE -->
+        <div class="doc-section">
+          <div class="doc-sec-header">
+            <div class="doc-sec-icon">💰</div>
+            <div class="doc-sec-title">Offer & Positioning Patterns</div>
+          </div>
+          <div class="doc-sec-body">${d.offerPatterns||""}</div>
+        </div>
+        <div class="doc-section">
+          <div class="doc-sec-header">
+            <div class="doc-sec-icon">✍️</div>
+            <div class="doc-sec-title">Copy & Targeting Insights</div>
+          </div>
+          <div class="doc-sec-body">${d.copyInsights||""}</div>
+          ${d.targetingInsights?`<div style="margin-top:12px;padding-top:12px;border-top:1px solid #EEEEE9" class="doc-sec-body">${d.targetingInsights}</div>`:""}
+          ${d.creativeFormats?`<div style="margin-top:12px;padding-top:12px;border-top:1px solid #EEEEE9" class="doc-sec-body">${d.creativeFormats}</div>`:""}
+        </div>
+
+        <!-- REPURPOSED ADS -->
+        ${d.repurposedAds?.length?`
+        <div class="doc-section">
+          <div class="doc-sec-header">
+            <div class="doc-sec-icon">⚡</div>
+            <div class="doc-sec-title">Repurposed Ads for ${S.clientBiz||"Your Client"}</div>
+          </div>
+          ${d.repurposedAds.map((a,i)=>`
+          <div class="ad-card-doc" data-n="${i+1}">
+            <div class="ad-num">Ad ${i+1} · ${a.hookType}</div>
+            <div class="ad-hook-lbl">${a.headline}</div>
+            <div class="ad-copy-doc"><em style="color:#888;font-size:12px">"${a.hook}"</em><br/><br/>${a.body}</div>
+            <div class="ad-cta-doc">CTA → <span>${a.cta}</span></div>
+          </div>`).join("")}
+        </div>`:""}
+
+        <!-- RECOMMENDATIONS -->
+        ${d.recommendations?.length?`
+        <div class="doc-section">
+          <div class="doc-sec-header">
+            <div class="doc-sec-icon">🚀</div>
+            <div class="doc-sec-title">Strategic Recommendations for ${S.clientBiz||"Your Client"}</div>
+          </div>
+          <div>${d.recommendations.map((r,i)=>`
+            <div class="rec-item">
+              <div class="rec-num">${i+1}</div>
+              <div class="rec-text">${r}</div>
+            </div>`).join("")}
+          </div>
+        </div>`:""}
+      </div>
+
+      <!-- FOOTER -->
+      <div class="doc-footer">
+        <div class="doc-footer-brand"><strong>VirtueCore</strong> · Competitor Ad Intelligence</div>
+        <div class="doc-footer-date">${date} · Confidential</div>
+      </div>
+    </div>
+  </div>
+</div>`;}
+
+// ──────────────────────────────────────────────────────────
+// BIND
+// ──────────────────────────────────────────────────────────
+function bindShell(){
+  document.getElementById("so").onclick=()=>set({view:"login",user:null,ads:[],selAds:[],analysisRaw:"",analysisData:null,showReport:false});
+  document.querySelectorAll("[data-nav]").forEach(el=>el.onclick=()=>set({view:el.dataset.nav,showReport:false}));
+
+  if(S.view==="dashboard"){
+    const gs=document.getElementById("gscan");if(gs)gs.onclick=()=>set({view:"search"});
+    const dg=document.getElementById("dgo");if(dg&&S.selAds.length)dg.onclick=()=>{if(S.analysisData||S.analysisRaw)set({showReport:true});else set({view:"search"});};
+  }
+  if(S.view==="search"){
+    const sq=document.getElementById("sq");if(sq){sq.oninput=e=>S.searchQuery=e.target.value;sq.onkeydown=e=>{if(e.key==="Enter")fetchAds();};}
+    const sc=document.getElementById("sc");if(sc)sc.onchange=e=>S.country=e.target.value;
+    const sb=document.getElementById("sbtn");if(sb)sb.onclick=fetchAds;
+    document.querySelectorAll("[data-fmt]").forEach(el=>el.onclick=()=>set({filterFormat:el.dataset.fmt}));
+    document.querySelectorAll("[data-plat]").forEach(el=>el.onclick=()=>set({filterPlatform:el.dataset.plat}));
+    document.querySelectorAll("[data-id]").forEach(el=>{el.onclick=()=>{const id=parseInt(el.dataset.id);const ad=S.ads.find(a=>a.id===id);const already=S.selAds.find(a=>a.id===id);if(already)set({selAds:S.selAds.filter(a=>a.id!==id)});else set({selAds:[...S.selAds,ad]});};});
+    const cb=document.getElementById("cb");if(cb)cb.oninput=e=>S.clientBiz=e.target.value;
+    const ab=document.getElementById("abtn");if(ab)ab.onclick=()=>{const c=document.getElementById("cb");if(c)S.clientBiz=c.value;analyse();};
+  }
+  if(S.view==="settings"){
+    const mt=document.getElementById("mt");if(mt)mt.oninput=e=>S.metaToken=e.target.value;
+    const smt=document.getElementById("smt");if(smt)smt.onclick=()=>{const v=document.getElementById("mt")?.value||"";S.metaToken=v;set({saved:true});setTimeout(()=>set({saved:false}),3000);};
+    document.querySelectorAll("[data-ind]").forEach(el=>el.onclick=()=>set({industry:el.dataset.ind}));
+    const cd=document.getElementById("cd");if(cd)cd.oninput=e=>S.customDays=e.target.value;
+  }
+  if(S.showReport){
+    const cr=document.getElementById("close-rep");if(cr)cr.onclick=()=>set({showReport:false});
+    const rt=document.getElementById("raw-tog");if(rt)rt.onclick=()=>set({showRaw:!S.showRaw});
+    const ov=document.getElementById("rep-overlay");
+    if(ov)ov.onclick=e=>{if(e.target===ov)set({showReport:false});};
+  }
+}
+render();
+</script>
+</body>
+</html>
