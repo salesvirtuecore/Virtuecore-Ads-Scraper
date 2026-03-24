@@ -9,6 +9,7 @@ const patchSchema = z.object({
     industry: z.string().trim().max(80).optional(),
     industry_preference: z.string().trim().max(80).optional(),
     custom_threshold_days: z.number().int().positive().max(3650).optional(),
+    meta_access_token: z.string().trim().max(512).optional(),
 });
 
 export async function PATCH(req: NextRequest) {

@@ -15,6 +15,8 @@ export default function SettingsPage() {
     const [fullName, setFullName] = useState(profile.full_name || "");
     const [businessName, setBusinessName] = useState(profile.business_name || "");
     const [industry, setIndustry] = useState(profile.industry || "Other");
+    const [metaToken, setMetaToken] = useState("");
+    const [metaTokenSaved, setMetaTokenSaved] = useState(false);
     const [saveMsg, setSaveMsg] = useState("");
     const [saveError, setSaveError] = useState("");
     const [saveLoading, setSaveLoading] = useState(false);
@@ -30,6 +32,21 @@ export default function SettingsPage() {
         setBusinessName(profile.business_name || "");
         setIndustry(profile.industry || "Other");
     }, [profile]);
+
+    async function saveMetaToken(e: FormEvent) {
+        e.preventDefault();
+        if (!metaToken.trim()) return;
+        const res = await fetch("/api/profile", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ meta_access_token: metaToken.trim() }),
+        });
+        if (res.ok) {
+            setMetaTokenSaved(true);
+            setMetaToken("");
+            setTimeout(() => setMetaTokenSaved(false), 3000);
+        }
+    }
 
     async function saveProfile(e: FormEvent) {
         e.preventDefault();
@@ -127,6 +144,26 @@ export default function SettingsPage() {
                     </button>
                     {saveMsg && <p className={ui.success}>{saveMsg}</p>}
                     {saveError && <p className={ui.error}>{saveError}</p>}
+                </form>
+            </section>
+
+            <section className={ui.card}>
+                <h2>Meta Access Token</h2>
+                <p className={ui.subtle} style={{ marginBottom: "0.75rem" }}>
+                    Required for live ad data from the Meta Ads Library. Get yours from the Graph API Explorer with <code>ads_read</code> permission. Stored securely per-account.
+                </p>
+                <form className={ui.formCol} onSubmit={saveMetaToken}>
+                    <input
+                        type="password"
+                        value={metaToken}
+                        onChange={(e) => setMetaToken(e.target.value)}
+                        placeholder="Paste new token here (EAA... or AppID|secret)"
+                        autoComplete="off"
+                    />
+                    <button type="submit" disabled={!metaToken.trim()}>
+                        Save Token
+                    </button>
+                    {metaTokenSaved && <p className={ui.success}>Token saved.</p>}
                 </form>
             </section>
 
