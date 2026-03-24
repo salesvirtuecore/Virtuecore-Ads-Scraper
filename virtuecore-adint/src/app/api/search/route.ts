@@ -177,7 +177,7 @@ export async function POST(req: NextRequest) {
 
     const profileRes = await supabase
         .from("profiles")
-        .select("id, org_id, tier, searches_used_this_week, total_searches, week_reset_at, meta_access_token")
+        .select("id, org_id, tier, searches_used_this_week, total_searches, week_reset_at")
         .eq("id", user.id)
         .single();
 
@@ -234,7 +234,7 @@ export async function POST(req: NextRequest) {
         ads = cached.ads;
         provenance = cached.provenance;
     } else {
-        const token = (profile as Record<string, unknown>).meta_access_token as string | undefined || process.env.META_ACCESS_TOKEN;
+        const token = process.env.META_ACCESS_TOKEN;
         if (!token) {
             provenance = "meta-error";
             metaError = "META_ACCESS_TOKEN not configured on server.";
