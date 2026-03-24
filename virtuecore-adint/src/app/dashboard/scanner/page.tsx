@@ -214,13 +214,13 @@ export default function ScannerPage() {
 
         return (
             <div style={{ display: "grid", gap: "0.85rem" }}>
-                {r.landscape && (
+                {!!r.landscape && (
                     <div>
                         <p className={ui.sidebarEyebrow} style={{ marginBottom: "0.35rem" }}>Market Landscape</p>
                         <p style={{ color: "rgba(255,255,255,0.88)", lineHeight: 1.6, margin: 0 }}>{String(r.landscape)}</p>
                     </div>
                 )}
-                {r.opportunityGap && (
+                {!!r.opportunityGap && (
                     <div style={{ background: "rgba(229,191,68,0.08)", border: "1px solid rgba(229,191,68,0.22)", borderRadius: 10, padding: "0.7rem 0.85rem" }}>
                         <p className={ui.sidebarEyebrow} style={{ marginBottom: "0.3rem" }}>Opportunity Gap</p>
                         <p style={{ color: "rgba(255,255,255,0.88)", lineHeight: 1.6, margin: 0 }}>{String(r.opportunityGap)}</p>
