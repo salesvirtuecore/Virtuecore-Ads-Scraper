@@ -1,0 +1,79 @@
+{
+    "name": "VirtueCore Event Relay",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "virtuecore-event-relay",
+                "responseMode": "responseNode",
+                "options": {}
+            },
+            "id": "Webhook_1",
+            "name": "Incoming Event",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 2,
+            "position": [
+                260,
+                260
+            ]
+        },
+        {
+            "parameters": {
+                "mode": "runOnceForEachItem",
+                "jsCode": "// Generic relay template. Replace with your own action nodes.\nreturn [{ json: { ok: true, event: $json.body?.event || 'unknown', payload: $json.body } }];"
+            },
+            "id": "Code_1",
+            "name": "Process Event",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                560,
+                260
+            ]
+        },
+        {
+            "parameters": {
+                "respondWith": "json",
+                "responseBody": "={\n  \"ok\": true,\n  \"received\": $json.event\n}",
+                "options": {}
+            },
+            "id": "Respond_1",
+            "name": "Respond OK",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1,
+            "position": [
+                840,
+                260
+            ]
+        }
+    ],
+    "connections": {
+        "Incoming Event": {
+            "main": [
+                [
+                    {
+                        "node": "Process Event",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Process Event": {
+            "main": [
+                [
+                    {
+                        "node": "Respond OK",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "1"
+}

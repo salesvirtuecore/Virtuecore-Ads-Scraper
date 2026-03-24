@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+:root {
+  /* Brand tokens — black, white, gold */
+  --color-gold: #e5bf44;
+  --color-gold-light: #f0cb54;
+  --color-gold-dim: #cc9519;
+  --color-ink: #080808;
+  --color-ink-mid: #0d0d0d;
+
+  /* Typography */
+  --font-display: var(--font-display, Georgia, serif);
+  --font-sans: var(--font-sans, system-ui, sans-serif);
+  --font-mono: var(--font-mono, monospace);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-height: 100%;
+  color: #ffffff;
+  background-color: var(--color-ink);
+  background-image:
+    radial-gradient(circle at 78% 20%, rgba(229, 191, 68, 0.10), transparent 28%),
+    linear-gradient(145deg, #050505, #0d0d0d 52%, #111111);
+  background-attachment: fixed;
+  font-family: var(--font-sans);
+  margin: 0;
+}
+
+a {
+  color: var(--color-gold);
+  text-decoration: none;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+  letter-spacing: 0.025em;
+}
