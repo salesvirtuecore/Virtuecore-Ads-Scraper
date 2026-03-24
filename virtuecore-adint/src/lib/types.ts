@@ -39,7 +39,7 @@ export type OrgProfile = {
     plan_tier: PlanTier;
 };
 
-export type AccountTier = "free" | "pro" | "client";
+export type AccountTier = "free" | "pro" | "ultimate" | "client";
 
 export type ReportType = "basic" | "full" | "strategy";
 

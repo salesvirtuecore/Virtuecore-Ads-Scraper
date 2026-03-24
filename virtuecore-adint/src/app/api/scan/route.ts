@@ -15,12 +15,14 @@ const scanSchema = z.object({
 const WEEKLY_SEARCH_LIMITS: Record<AccountTier, number> = {
     free: 5,
     pro: 25,
+    ultimate: 50,
     client: 200,
 };
 
 const SEARCH_RESULT_CAPS: Record<AccountTier, number> = {
     free: 60,
     pro: 120,
+    ultimate: 150,
     client: 200,
 };
 

@@ -43,6 +43,7 @@ const CACHE_TTL_MS = 60 * 60 * 1000;
 const WEEKLY_LIMITS: Record<AccountTier, number> = {
     free: 5,
     pro: 25,
+    ultimate: 50,
     client: 200,
 };
 

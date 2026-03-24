@@ -12,6 +12,7 @@ import { DashboardProvider, type DashboardProfile } from "./dashboard-context";
 
 const NAV_ITEMS = [
     { href: "/dashboard/scanner", label: "Ad Scanner" },
+    { href: "/dashboard/funnel", label: "Funnel Analyser" },
     { href: "/dashboard/reports", label: "Report Library" },
     { href: "/dashboard/settings", label: "Settings" },
     { href: "/dashboard/upgrade", label: "Upgrade" },
