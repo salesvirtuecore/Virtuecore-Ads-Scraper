@@ -14,23 +14,19 @@ type CacheEntry = {
     cachedAt: number;
 };
 
-type MetaAdRaw = {
-    id?: string;
-    page_id?: string;
-    page_name?: string;
-    ad_snapshot_url?: string;
-    ad_creative_link_urls?: string[];
-    link_url?: string;
-    ad_creative_bodies?: string[];
-    ad_creative_link_titles?: string[];
-    ad_delivery_start_time?: string;
-    ad_delivery_stop_time?: string;
-    ad_delivery_status?: string;
-    publisher_platforms?: string[];
-    spend?: {
-        lower_bound?: number;
-        upper_bound?: number;
-    };
+type ApifyAdRaw = {
+    adArchiveID?: string;
+    pageID?: string;
+    pageName?: string;
+    adSnapshotUrl?: string;
+    adLibraryURL?: string;
+    adCreativeBodies?: string[];
+    ctaHeadline?: string;
+    ctaDomain?: string;
+    publisherPlatforms?: string[];
+    adStatus?: string;
+    startDate?: string;
+    endDate?: string;
 };
 
 const searchSchema = z.object({
@@ -58,100 +54,85 @@ function weekResetIsoFromNow(): string {
     return d.toISOString();
 }
 
-function normalizeAds(rows: MetaAdRaw[], fetchedAt: string): AdRecord[] {
-    return rows.map((a: MetaAdRaw, i: number) => {
-        const id = String(a.id || `${Date.now()}-${i}`);
-        const startTime = a.ad_delivery_start_time || "";
-        const deliveryStatus =
-            a.ad_delivery_status || (a.ad_delivery_stop_time ? "INACTIVE" : "ACTIVE");
+const APIFY_ACTOR_ID = "ZQyDz7154hrOfrDMK";
 
+function normalizeApifyAds(rows: ApifyAdRaw[], fetchedAt: string): AdRecord[] {
+    return rows.map((a, i) => {
+        const id = String(a.adArchiveID || `${Date.now()}-${i}`);
+        const startTime = a.startDate || "";
+        const days = startTime
+            ? Math.max(0, Math.floor((Date.now() - new Date(startTime).getTime()) / 86400000))
+            : 0;
         return {
             id,
-            page: a.page_name || "Unknown",
-            pageId: a.page_id ? String(a.page_id) : "",
-            body: (a.ad_creative_bodies || ["No copy"])[0],
-            days: startTime
-                ? Math.max(0, Math.floor((Date.now() - new Date(startTime).getTime()) / 86400000))
-                : 0,
-            spend: a.spend ? `£${a.spend.lower_bound}–${a.spend.upper_bound}` : "—",
+            page: a.pageName || "Unknown",
+            pageId: a.pageID ? String(a.pageID) : "",
+            body: (a.adCreativeBodies || ["No copy available"])[0],
+            days,
+            spend: "—",
             format: "Live",
-            cta: (a.ad_creative_link_titles || ["—"])[0],
+            cta: a.ctaHeadline || "—",
             hook: "Live",
-            headline: (a.ad_creative_link_titles || ["Live Ad"])[0],
-            targeting: "Live",
-            platforms: (a.publisher_platforms || []).map((p: string) => String(p).toUpperCase()),
-            snapshotUrl: a.ad_snapshot_url || "",
-            creativeLinkUrl: a.ad_creative_link_urls?.[0] || a.link_url || a.ad_snapshot_url || "",
+            headline: a.ctaHeadline || "Live Ad",
+            targeting: a.ctaDomain || "Live",
+            platforms: (a.publisherPlatforms || []).map((p) => String(p).toUpperCase()),
+            snapshotUrl: a.adSnapshotUrl || "",
+            creativeLinkUrl: a.adLibraryURL || a.adSnapshotUrl || "",
             startTime,
-            deliveryStatus,
+            deliveryStatus: a.adStatus || "ACTIVE",
             source: "META_LIBRARY",
             fetchedAt,
         };
     });
 }
 
-async function fetchFromMeta(args: {
+async function fetchFromApify(args: {
     query: string;
     country: string;
     limit: number;
-    token: string;
+    apiKey: string;
 }): Promise<{ ads: AdRecord[]; provenance: Provenance; error?: string }> {
-    const { query, country, limit, token } = args;
+    const { query, country, limit, apiKey } = args;
     const fetchedAt = new Date().toISOString();
 
-    const fields = [
-        "id",
-        "page_id",
-        "page_name",
-        "ad_snapshot_url",
-        "ad_creative_link_urls",
-        "ad_creative_bodies",
-        "ad_creative_link_titles",
-        "ad_delivery_start_time",
-        "ad_delivery_stop_time",
-        "ad_delivery_status",
-        "publisher_platforms",
-        "spend",
-    ].join(",");
+    const libraryUrl = `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${country}&q=${encodeURIComponent(query)}&search_type=keyword_unordered&media_type=all`;
 
-    const pageSize = Math.min(50, limit);
-    let nextUrl = `https://graph.facebook.com/v19.0/ads_archive?search_terms=${encodeURIComponent(
-        query
-    )}&ad_reached_countries=["${country}"]&ad_type=ALL&ad_active_status=ALL&fields=${encodeURIComponent(
-        fields
-    )}&access_token=${encodeURIComponent(token)}&limit=${pageSize}`;
-
-    const seen = new Set<string>();
-    const ads: AdRecord[] = [];
-
-    while (nextUrl && ads.length < limit) {
-        const res = await fetch(nextUrl, { cache: "no-store" });
-        const data = await res.json().catch(() => ({}));
-
-        if (!res.ok || data?.error) {
-            return {
-                ads: [],
-                provenance: "meta-error",
-                error: data?.error?.message || "Meta API request failed.",
-            };
+    // Start run and wait up to 90s
+    const runRes = await fetch(
+        `https://api.apify.com/v2/acts/${APIFY_ACTOR_ID}/runs?waitForFinish=90`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${apiKey}`,
+            },
+            body: JSON.stringify({ startUrls: [{ url: libraryUrl }], maxResults: limit }),
+            cache: "no-store",
         }
+    );
 
-        const rows = normalizeAds(data.data || [], fetchedAt);
-        for (const row of rows) {
-            if (!seen.has(row.id)) {
-                seen.add(row.id);
-                ads.push(row);
-                if (ads.length >= limit) break;
-            }
-        }
-
-        nextUrl = data?.paging?.next || "";
+    const runData = await runRes.json().catch(() => ({}));
+    if (!runRes.ok || runData?.error) {
+        return { ads: [], provenance: "meta-error", error: runData?.error?.message || "Apify run failed." };
     }
 
-    return {
-        ads,
-        provenance: ads.length > 0 ? "meta-live" : "meta-live-empty",
-    };
+    const datasetId = runData?.data?.defaultDatasetId;
+    if (!datasetId) {
+        return { ads: [], provenance: "meta-error", error: "No dataset returned from Apify." };
+    }
+
+    const itemsRes = await fetch(
+        `https://api.apify.com/v2/datasets/${datasetId}/items?limit=${limit}`,
+        { headers: { Authorization: `Bearer ${apiKey}` }, cache: "no-store" }
+    );
+
+    const items = await itemsRes.json().catch(() => []);
+    if (!Array.isArray(items)) {
+        return { ads: [], provenance: "meta-live-empty" };
+    }
+
+    const ads = normalizeApifyAds(items as ApifyAdRaw[], fetchedAt);
+    return { ads, provenance: ads.length > 0 ? "meta-live" : "meta-live-empty" };
 }
 
 export async function POST(req: NextRequest) {
@@ -234,12 +215,12 @@ export async function POST(req: NextRequest) {
         ads = cached.ads;
         provenance = cached.provenance;
     } else {
-        const token = process.env.META_ACCESS_TOKEN;
-        if (!token) {
+        const apiKey = process.env.APIFY_API_KEY;
+        if (!apiKey) {
             provenance = "meta-error";
-            metaError = "META_ACCESS_TOKEN not configured on server.";
+            metaError = "APIFY_API_KEY not configured on server.";
         } else {
-            const live = await fetchFromMeta({ query, country, limit, token });
+            const live = await fetchFromApify({ query, country, limit, apiKey });
             ads = live.ads;
             provenance = live.provenance;
             metaError = live.error;
