@@ -95,7 +95,8 @@ async function fetchFromApify(args: {
     const { query, country, limit, apiKey } = args;
     const fetchedAt = new Date().toISOString();
 
-    const libraryUrl = `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=${country}&q=${encodeURIComponent(query)}&search_type=keyword_unordered&media_type=all`;
+    // Fetch ALL ads (active + ended) so we can surface high-performing past ads
+    const libraryUrl = `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=${country}&q=${encodeURIComponent(query)}&search_type=keyword_unordered&media_type=all`;
 
     // Start run and wait up to 90s
     const runRes = await fetch(
@@ -131,7 +132,16 @@ async function fetchFromApify(args: {
         return { ads: [], provenance: "meta-live-empty" };
     }
 
-    const ads = normalizeApifyAds(items as ApifyAdRaw[], fetchedAt);
+    const allAds = normalizeApifyAds(items as ApifyAdRaw[], fetchedAt);
+    const oneYearAgo = Date.now() - 365 * 24 * 60 * 60 * 1000;
+
+    // Keep: ran 90+ days AND started within the last year
+    const ads = allAds.filter((ad) => {
+        if (ad.days < 90) return false;
+        if (ad.startTime && new Date(ad.startTime).getTime() < oneYearAgo) return false;
+        return true;
+    });
+
     return { ads, provenance: ads.length > 0 ? "meta-live" : "meta-live-empty" };
 }
 

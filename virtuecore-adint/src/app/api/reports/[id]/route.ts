@@ -9,6 +9,11 @@ type Params = {
 export async function GET(_req: NextRequest, { params }: Params) {
     const { id } = await params;
 
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!id || !uuidRegex.test(id)) {
+        return NextResponse.json({ error: "Invalid report ID." }, { status: 400 });
+    }
+
     const supabase = await getSupabaseServerClient();
     if (!supabase) {
         return NextResponse.json({ error: "Supabase server client not configured." }, { status: 500 });
