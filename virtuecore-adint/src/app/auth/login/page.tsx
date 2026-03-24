@@ -2,12 +2,10 @@
 
 import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
-    const router = useRouter();
     const supabase = useMemo(() => getSupabaseBrowserClient(), []);
 
     const [email, setEmail] = useState("");
@@ -33,7 +31,7 @@ export default function LoginPage() {
             return;
         }
 
-        router.replace("/dashboard");
+        window.location.href = "/dashboard/scanner";
     }
 
     return (
