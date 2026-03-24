@@ -324,35 +324,88 @@ export default function ScannerPage() {
                 <p className={ui.subtle}>Searches are counted server-side and stored against your weekly allowance.</p>
             </section>
 
-            <section className={ui.grid2}>
-                <article className={ui.card}>
-                    <div className={ui.formCol}>
-                        <input value={industry} onChange={(e) => setIndustry(e.target.value)} placeholder="Industry" />
-                        <input
-                            type="number"
-                            min={1}
-                            value={thresholdDays}
-                            onChange={(e) => setThresholdDays(Number(e.target.value) || 90)}
-                            placeholder="Winning threshold days"
-                        />
-                    </div>
-                </article>
-                <article className={ui.card}>
-                    <div className={ui.formCol}>
-                        <label>
-                            <span className={ui.subtle}>Report type</span>
-                            <select value={reportType} onChange={(e) => setReportType(e.target.value as ReportType)}>
-                                {reportOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>{option.label}</option>
-                                ))}
-                            </select>
-                        </label>
-                        <p className={ui.subtle}>
-                            Free users can generate basic reports only. Full Analysis and Strategy unlock on Pro and Client tiers.
-                        </p>
-                    </div>
-                </article>
-            </section>
+            <div style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                padding: "0.6rem 0.85rem",
+                background: "rgba(255,255,255,0.025)",
+                border: "1px solid rgba(255,255,255,0.07)",
+                borderRadius: "12px",
+                flexWrap: "wrap",
+            }}>
+                <span style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.75rem", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
+                    Report config
+                </span>
+                <div style={{ width: "1px", height: "14px", background: "rgba(255,255,255,0.1)", flexShrink: 0 }} />
+                <input
+                    value={industry}
+                    onChange={(e) => setIndustry(e.target.value)}
+                    placeholder="Industry"
+                    style={{
+                        flex: "1 1 120px",
+                        minWidth: 100,
+                        background: "transparent",
+                        border: "none",
+                        borderBottom: "1px solid rgba(255,255,255,0.15)",
+                        borderRadius: 0,
+                        color: "rgba(255,255,255,0.85)",
+                        fontSize: "0.88rem",
+                        padding: "0.25rem 0.1rem",
+                        outline: "none",
+                        fontFamily: "var(--font-sans)",
+                    }}
+                />
+                <div style={{ width: "1px", height: "14px", background: "rgba(255,255,255,0.1)", flexShrink: 0 }} />
+                <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                    <span style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.8rem", whiteSpace: "nowrap" }}>Winning ≥</span>
+                    <input
+                        type="number"
+                        min={1}
+                        value={thresholdDays}
+                        onChange={(e) => setThresholdDays(Number(e.target.value) || 90)}
+                        style={{
+                            width: 52,
+                            background: "transparent",
+                            border: "none",
+                            borderBottom: "1px solid rgba(255,255,255,0.15)",
+                            borderRadius: 0,
+                            color: "rgba(255,255,255,0.85)",
+                            fontSize: "0.88rem",
+                            padding: "0.25rem 0.1rem",
+                            outline: "none",
+                            fontFamily: "var(--font-sans)",
+                            textAlign: "center",
+                        }}
+                    />
+                    <span style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.8rem" }}>days</span>
+                </div>
+                <div style={{ width: "1px", height: "14px", background: "rgba(255,255,255,0.1)", flexShrink: 0 }} />
+                <select
+                    value={reportType}
+                    onChange={(e) => setReportType(e.target.value as ReportType)}
+                    style={{
+                        flex: "1 1 140px",
+                        background: "transparent",
+                        border: "none",
+                        borderBottom: "1px solid rgba(255,255,255,0.15)",
+                        borderRadius: 0,
+                        color: "rgba(255,255,255,0.85)",
+                        fontSize: "0.88rem",
+                        padding: "0.25rem 0.1rem",
+                        outline: "none",
+                        fontFamily: "var(--font-sans)",
+                        cursor: "pointer",
+                    }}
+                >
+                    {reportOptions.map((option) => (
+                        <option key={option.value} value={option.value}
+                            style={{ background: "#111", color: "#fff" }}>
+                            {option.label}
+                        </option>
+                    ))}
+                </select>
+            </div>
 
             <section className={ui.card}>
                 <div className={ui.tableHeader}>
