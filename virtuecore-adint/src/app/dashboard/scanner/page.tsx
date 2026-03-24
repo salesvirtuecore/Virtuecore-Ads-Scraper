@@ -64,7 +64,6 @@ export default function ScannerPage() {
     const [reports, setReports] = useState<ReportHistoryRow[]>([]);
     const [lastSearchId, setLastSearchId] = useState("");
     const [lastReportId, setLastReportId] = useState("");
-    const [previewAd, setPreviewAd] = useState<AdRecord | null>(null);
     const [globalMsg, setGlobalMsg] = useState("");
 
     const weeklyLimit = WEEKLY_SEARCH_LIMITS[profile.tier];
@@ -126,7 +125,6 @@ export default function ScannerPage() {
             setLastSearchId(data.search_id || "");
             setLastReportId("");
             setAnalysis(null);
-            setPreviewAd(null);
 
             const next: Record<string, boolean> = {};
             for (const ad of data.ads || []) next[ad.id] = true;
@@ -305,7 +303,7 @@ export default function ScannerPage() {
                     <div>
                         <p className={ui.sidebarEyebrow}>Competitive Intelligence</p>
                         <h2>Ad Scanner</h2>
-                        <p className={ui.subtle}>Winning = {thresholdDays}+ days running · {industry} · {TIER_LABELS[profile.tier]} tier</p>
+                        <p className={ui.subtle}>Ads sorted longest to shortest running · {industry} · {TIER_LABELS[profile.tier]} tier</p>
                     </div>
                     <p className={ui.subtle}>{weeklyLimit - (profile.searches_used_this_week || 0)} searches remaining · resets {formatReset(profile.week_reset_at)}</p>
                 </div>
@@ -411,7 +409,7 @@ export default function ScannerPage() {
                 <div className={ui.tableHeader}>
                     <div>
                         <h2>Ad Results</h2>
-                        <p className={ui.subtle}>{filteredAds.length} results · {winningCount} winning</p>
+                        <p className={ui.subtle}>{filteredAds.length} ads · sorted by longest running</p>
                     </div>
                     <div className={ui.filterBar}>
                         <div className={ui.filterGroup}>
@@ -521,9 +519,9 @@ export default function ScannerPage() {
                                         </td>
                                         <td>
                                             {ad.snapshotUrl ? (
-                                                <button type="button" className={ui.previewButton} onClick={() => setPreviewAd(ad)}>
-                                                    Watch/Verify
-                                                </button>
+                                                <a href={ad.snapshotUrl} target="_blank" rel="noreferrer" className={ui.previewButton}>
+                                                    View →
+                                                </a>
                                             ) : "—"}
                                         </td>
                                     </tr>
@@ -583,49 +581,6 @@ export default function ScannerPage() {
                 </section>
             )}
 
-            {previewAd && (
-                <div className={ui.modalOverlay}>
-                    <div className={ui.previewShell}>
-                        <div className={ui.previewHead}>
-                            <div>
-                                <div className={ui.previewTitle}>Live Ad Preview · {previewAd.page}</div>
-                                <div className={ui.previewSub}>Pulled from Facebook Ads Library snapshot URL</div>
-                            </div>
-                            <div className={ui.previewActions}>
-                                <button type="button" className={ui.inlineActionGold} onClick={() => window.open(previewAd.snapshotUrl, "_blank", "noopener,noreferrer")}>
-                                    Open Video Window
-                                </button>
-                                <a href={previewAd.snapshotUrl} target="_blank" rel="noreferrer" className={ui.inlineActionGold}>
-                                    Open In Meta Library
-                                </a>
-                                <button type="button" className={ui.inlineActionGhost} onClick={() => setPreviewAd(null)}>
-                                    Close
-                                </button>
-                            </div>
-                        </div>
-
-                        <iframe
-                            className={ui.previewFrame}
-                            src={previewAd.snapshotUrl}
-                            allow="autoplay; encrypted-media; picture-in-picture; clipboard-write"
-                            loading="lazy"
-                            referrerPolicy="no-referrer-when-downgrade"
-                            title={`Preview of ${previewAd.page}`}
-                        />
-
-                        <div className={ui.verifyCard}>
-                            <div className={ui.rowMeta}>Source Verification</div>
-                            <div>Source: <strong>{previewAd.source === "META_LIBRARY" ? "Meta Ads Library" : "Demo Data"}</strong></div>
-                            <div>Ad ID: <strong>{previewAd.id}</strong></div>
-                            <div>Fetched: <strong>{new Date(previewAd.fetchedAt).toLocaleString("en-GB")}</strong></div>
-                        </div>
-
-                        <p className={ui.previewSub}>
-                            Facebook sometimes blocks in-app iframe playback. Use <strong>Open Video Window</strong> for the most reliable playback, then keep this app open beside it for analysis.
-                        </p>
-                    </div>
-                </div>
-            )}
         </>
     );
 }
