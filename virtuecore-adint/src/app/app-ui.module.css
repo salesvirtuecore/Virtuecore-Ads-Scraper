@@ -10,7 +10,9 @@
 
 .dashboardShell {
     width: min(1440px, 97vw);
-    margin: 1.5rem auto 3rem;
+    margin: 0 auto;
+    padding: 1.5rem 0 3rem;
+    min-height: 100vh;
     display: grid;
     grid-template-columns: 260px minmax(0, 1fr);
     gap: 1.25rem;

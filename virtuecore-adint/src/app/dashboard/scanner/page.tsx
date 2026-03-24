@@ -457,6 +457,7 @@ export default function ScannerPage() {
                     </div>
                 )}
 
+                {filteredAds.length > 0 && (
                 <div className={ui.tableWrap}>
                     <table className={ui.adTable}>
                         <thead>
@@ -531,6 +532,7 @@ export default function ScannerPage() {
                         </tbody>
                     </table>
                 </div>
+                )}
             </section>
 
             <section className={ui.grid2}>
