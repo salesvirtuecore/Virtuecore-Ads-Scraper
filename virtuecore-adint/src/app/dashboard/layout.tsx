@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import ui from "@/app/app-ui.module.css";
@@ -19,7 +19,6 @@ const NAV_ITEMS = [
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-    const router = useRouter();
     const pathname = usePathname();
     const supabase = useMemo(() => getSupabaseBrowserClient(), []);
 
@@ -27,63 +26,61 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const [profile, setProfile] = useState<DashboardProfile | null>(null);
 
     useEffect(() => {
-        let mounted = true;
-
-        async function boot() {
-            if (!supabase) {
-                if (mounted) {
-                    setLoading(false);
-                }
-                return;
-            }
-
-            const { data } = await supabase.auth.getSession();
-            const userId = data.session?.user?.id;
-
-            if (!userId) {
-                if (mounted) {
-                    setLoading(false);
-                    router.replace("/auth/login");
-                }
-                return;
-            }
-
-            const p = await supabase
-                .from("profiles")
-                .select("id, full_name, role, org_id, plan_tier, tier, searches_used_this_week, week_reset_at, email, business_name, industry")
-                .eq("id", userId)
-                .single();
-
-            if (!p.error && p.data && mounted) {
-                setProfile({
-                    ...(p.data as DashboardProfile),
-                    tier: (p.data.tier || "free") as DashboardProfile["tier"],
-                });
-            }
-
-            if (mounted) {
-                setLoading(false);
-            }
+        if (!supabase) {
+            setLoading(false);
+            return;
         }
 
-        void boot();
-        return () => {
-            mounted = false;
-        };
-    }, [router, supabase]);
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+            async (_event, session) => {
+                if (!session?.user?.id) {
+                    setProfile(null);
+                    setLoading(false);
+                    return;
+                }
+
+                const p = await supabase
+                    .from("profiles")
+                    .select("id, full_name, role, org_id, plan_tier, tier, searches_used_this_week, week_reset_at, email, business_name, industry")
+                    .eq("id", session.user.id)
+                    .single();
+
+                if (!p.error && p.data) {
+                    setProfile({
+                        ...(p.data as DashboardProfile),
+                        tier: (p.data.tier || "free") as DashboardProfile["tier"],
+                    });
+                }
+                setLoading(false);
+            }
+        );
+
+        return () => subscription.unsubscribe();
+    }, [supabase]);
 
     async function signOut() {
         if (supabase) {
             await supabase.auth.signOut();
         }
-        router.replace("/auth/login");
+        window.location.href = "/auth/login";
     }
 
-    if (loading || !profile) {
+    if (loading) {
         return (
             <main className={ui.shell}>
                 <section className={ui.card}>
                     <p className={ui.subtle}>Loading dashboard...</p>
+                </section>
+            </main>
+        );
+    }
+
+    if (!profile) {
+        return (
+            <main className={ui.shell}>
+                <section className={ui.card}>
+                    <p className={ui.subtle} style={{ marginBottom: "1rem" }}>Session expired. Please sign in again.</p>
+                    <a href="/auth/login" style={{ color: "#e5bf44" }}>Sign in →</a>
                 </section>
             </main>
         );
