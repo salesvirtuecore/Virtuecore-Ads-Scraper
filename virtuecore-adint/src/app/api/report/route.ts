@@ -52,6 +52,8 @@ function buildPrompt(args: {
 
     const basePrompt = `You are a senior Meta ads strategist at VirtueCore, a UK marketing agency. Produce a competitive intelligence report for: "${clientBusiness}" (Industry: ${industry}).
 
+WRITING STYLE: Write in plain, simple English that any business owner can read and act on immediately. No jargon, no buzzwords. Short sentences. Be direct and practical — write as if you are explaining this to someone who has never run ads before. Every insight must have a clear "so what does this mean for us" implication.
+
 FRAMEWORK: Identify ads running 3+ months (${thresholdDays}+ days) — these are profitable. Study angles, offers, headlines, copy length, and targeting signals.
 
 WINNING ADS IN THIS DATASET: ${winningAds.length} of ${selectedAds.length} have run 3+ months.

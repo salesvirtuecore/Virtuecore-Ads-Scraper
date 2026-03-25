@@ -626,9 +626,29 @@ export default function ScannerPage() {
 
                 <div className={ui.scannerBar}>
                     <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Enter niche or keyword — e.g. Wedding Videography, Travel Packages, Solar..." />
-                    <select value={country} onChange={(e) => setCountry(e.target.value)}>
+                    <select
+                        value={country}
+                        onChange={(e) => setCountry(e.target.value)}
+                        style={{
+                            background: "rgba(255,255,255,0.06)",
+                            border: "1px solid rgba(229,191,68,0.45)",
+                            borderRadius: 10,
+                            color: "#fff",
+                            fontSize: "0.92rem",
+                            padding: "0.55rem 0.85rem",
+                            outline: "none",
+                            cursor: "pointer",
+                            fontFamily: "var(--font-sans)",
+                            appearance: "none",
+                            WebkitAppearance: "none",
+                            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23e5bf44' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")`,
+                            backgroundRepeat: "no-repeat",
+                            backgroundPosition: "right 0.7rem center",
+                            paddingRight: "2rem",
+                        }}
+                    >
                         {COUNTRY_OPTIONS.map(([value, label]) => (
-                            <option key={value} value={value}>{label}</option>
+                            <option key={value} value={value} style={{ background: "#1a1a1a", color: "#fff" }}>{label}</option>
                         ))}
                     </select>
                     <button type="button" onClick={runScan} disabled={scanLoading}>{scanLoading ? "Scanning..." : "Scan Ads"}</button>
@@ -636,88 +656,6 @@ export default function ScannerPage() {
                 <p className={ui.subtle}>Searches are counted server-side and stored against your weekly allowance.</p>
             </section>
 
-            <div style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem",
-                padding: "0.6rem 0.85rem",
-                background: "rgba(255,255,255,0.025)",
-                border: "1px solid rgba(255,255,255,0.07)",
-                borderRadius: "12px",
-                flexWrap: "wrap",
-            }}>
-                <span style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.75rem", fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", whiteSpace: "nowrap" }}>
-                    Report config
-                </span>
-                <div style={{ width: "1px", height: "14px", background: "rgba(255,255,255,0.1)", flexShrink: 0 }} />
-                <input
-                    value={industry}
-                    onChange={(e) => setIndustry(e.target.value)}
-                    placeholder="Industry"
-                    style={{
-                        flex: "1 1 120px",
-                        minWidth: 100,
-                        background: "transparent",
-                        border: "none",
-                        borderBottom: "1px solid rgba(255,255,255,0.15)",
-                        borderRadius: 0,
-                        color: "rgba(255,255,255,0.85)",
-                        fontSize: "0.88rem",
-                        padding: "0.25rem 0.1rem",
-                        outline: "none",
-                        fontFamily: "var(--font-sans)",
-                    }}
-                />
-                <div style={{ width: "1px", height: "14px", background: "rgba(255,255,255,0.1)", flexShrink: 0 }} />
-                <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                    <span style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.8rem", whiteSpace: "nowrap" }}>Winning ≥</span>
-                    <input
-                        type="number"
-                        min={1}
-                        value={thresholdDays}
-                        onChange={(e) => setThresholdDays(Number(e.target.value) || 90)}
-                        style={{
-                            width: 52,
-                            background: "transparent",
-                            border: "none",
-                            borderBottom: "1px solid rgba(255,255,255,0.15)",
-                            borderRadius: 0,
-                            color: "rgba(255,255,255,0.85)",
-                            fontSize: "0.88rem",
-                            padding: "0.25rem 0.1rem",
-                            outline: "none",
-                            fontFamily: "var(--font-sans)",
-                            textAlign: "center",
-                        }}
-                    />
-                    <span style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.8rem" }}>days</span>
-                </div>
-                <div style={{ width: "1px", height: "14px", background: "rgba(255,255,255,0.1)", flexShrink: 0 }} />
-                <select
-                    value={reportType}
-                    onChange={(e) => setReportType(e.target.value as ReportType)}
-                    style={{
-                        flex: "1 1 140px",
-                        background: "transparent",
-                        border: "none",
-                        borderBottom: "1px solid rgba(255,255,255,0.15)",
-                        borderRadius: 0,
-                        color: "rgba(255,255,255,0.85)",
-                        fontSize: "0.88rem",
-                        padding: "0.25rem 0.1rem",
-                        outline: "none",
-                        fontFamily: "var(--font-sans)",
-                        cursor: "pointer",
-                    }}
-                >
-                    {reportOptions.map((option) => (
-                        <option key={option.value} value={option.value}
-                            style={{ background: "#111", color: "#fff" }}>
-                            {option.label}
-                        </option>
-                    ))}
-                </select>
-            </div>
 
             <section className={ui.card}>
                 <div className={ui.tableHeader}>
@@ -750,11 +688,30 @@ export default function ScannerPage() {
                                 </button>
                             ))}
                         </div>
-                        <select value={sortBy} onChange={(e) => setSortBy(e.target.value as typeof sortBy)} className={ui.sortSelect}>
-                            <option value="days-desc">Longest running</option>
-                            <option value="days-asc">Newest first</option>
-                            <option value="page-asc">Advertiser A-Z</option>
-                            <option value="source">Source</option>
+                        <select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                            style={{
+                                background: "rgba(255,255,255,0.06)",
+                                border: "1px solid rgba(229,191,68,0.4)",
+                                borderRadius: 8,
+                                color: "#fff",
+                                fontSize: "0.82rem",
+                                padding: "0.4rem 1.8rem 0.4rem 0.7rem",
+                                outline: "none",
+                                cursor: "pointer",
+                                fontFamily: "var(--font-sans)",
+                                appearance: "none",
+                                WebkitAppearance: "none",
+                                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23e5bf44' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")`,
+                                backgroundRepeat: "no-repeat",
+                                backgroundPosition: "right 0.55rem center",
+                            }}
+                        >
+                            <option value="days-desc" style={{ background: "#1a1a1a" }}>Longest running</option>
+                            <option value="days-asc" style={{ background: "#1a1a1a" }}>Newest first</option>
+                            <option value="page-asc" style={{ background: "#1a1a1a" }}>Advertiser A-Z</option>
+                            <option value="source" style={{ background: "#1a1a1a" }}>Source</option>
                         </select>
                     </div>
                 </div>
