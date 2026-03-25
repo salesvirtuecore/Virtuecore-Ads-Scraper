@@ -264,7 +264,7 @@ function ShimmerButton() {
                     whiteSpace: "nowrap",
                 }}
             >
-                Start for free →
+                Start free trial →
                 {/* shimmer sweep */}
                 <motion.span
                     aria-hidden="true"
@@ -407,7 +407,7 @@ export default function HeroSection() {
                     transition={{ duration: 0.5, delay: 1.55 }}
                     style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.85rem", margin: 0 }}
                 >
-                    Free plan available · No credit card required
+                    7 days Ultimate · 3 days Pro · then free forever · No credit card required
                 </motion.p>
             </div>
         </section>

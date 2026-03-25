@@ -273,9 +273,53 @@ export function PricingSection({
             }}>
                 <SectionHeading
                     label="Pricing"
-                    title="Two tiers. One goal."
-                    subtitle="Start with ad intelligence. Upgrade to full funnel analysis when you're ready to go deeper."
+                    title="Try everything free for 10 days."
+                    subtitle="Every new account gets full access from day one. No credit card required."
                 />
+
+                {/* Trial timeline banner */}
+                <div style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(min(200px, 100%), 1fr))",
+                    gap: "0",
+                    background: "rgba(229,191,68,0.06)",
+                    border: "1px solid rgba(229,191,68,0.2)",
+                    borderRadius: 16,
+                    overflow: "hidden",
+                }}>
+                    {[
+                        { days: "Days 1–7", tier: "Ultimate", desc: "Full access — funnel analyser, 50 scans/week, full AI reports", highlight: true },
+                        { days: "Days 8–10", tier: "Pro", desc: "Ad scanner + full reports, 25 scans/week", highlight: false },
+                        { days: "Day 11+", tier: "Free", desc: "5 scans/week, basic reports — or upgrade any time", highlight: false },
+                    ].map((row, i) => (
+                        <div key={i} style={{
+                            padding: "1rem 1.25rem",
+                            borderLeft: i > 0 ? "1px solid rgba(229,191,68,0.15)" : "none",
+                            display: "grid",
+                            gap: "0.3rem",
+                        }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                <span style={{
+                                    fontSize: "0.65rem",
+                                    fontWeight: 800,
+                                    letterSpacing: "0.12em",
+                                    textTransform: "uppercase",
+                                    color: "rgba(255,255,255,0.35)",
+                                }}>{row.days}</span>
+                                <span style={{
+                                    background: row.highlight ? "linear-gradient(120deg,#f0cb54,#cc9519)" : "rgba(255,255,255,0.08)",
+                                    color: row.highlight ? "#1e1703" : "rgba(255,255,255,0.7)",
+                                    fontSize: "0.65rem",
+                                    fontWeight: 800,
+                                    padding: "0.15rem 0.5rem",
+                                    borderRadius: 999,
+                                    letterSpacing: "0.06em",
+                                }}>{row.tier}</span>
+                            </div>
+                            <p style={{ margin: 0, color: "rgba(255,255,255,0.5)", fontSize: "0.8rem", lineHeight: 1.5 }}>{row.desc}</p>
+                        </div>
+                    ))}
+                </div>
 
                 <div style={{
                     display: "grid",

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { fireZapierEvent } from "@/lib/zapier";
 import type { AccountTier, AdRecord } from "@/lib/types";
+import { getEffectiveTier } from "@/lib/trial";
 
 const adSchema = z.object({
     id: z.string(),
@@ -127,7 +128,8 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Profile not found." }, { status: 404 });
     }
 
-    const tier = (profileRes.data.tier || "free") as AccountTier;
+    const storedTier = (profileRes.data.tier || "free") as AccountTier;
+    const tier = getEffectiveTier(storedTier, auth.data.user!.created_at) as AccountTier;
     const { search_id, report_type, selected_ads, client_business, industry, threshold_days } = parsed.data;
 
     if (tier === "free" && report_type !== "basic") {

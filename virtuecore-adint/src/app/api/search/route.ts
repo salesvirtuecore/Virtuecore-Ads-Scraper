@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { AccountTier, AdRecord } from "@/lib/types";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import { fireZapierEvent } from "@/lib/zapier";
+import { getEffectiveTier } from "@/lib/trial";
 
 type Provenance = "meta-live" | "meta-live-empty" | "meta-error";
 
@@ -177,7 +178,8 @@ export async function POST(req: NextRequest) {
     }
 
     const profile = profileRes.data;
-    const tier = (profile.tier || "free") as AccountTier;
+    const storedTier = (profile.tier || "free") as AccountTier;
+    const tier = getEffectiveTier(storedTier, user.created_at) as AccountTier;
     const weeklyLimit = WEEKLY_LIMITS[tier];
 
     let searchesUsed = profile.searches_used_this_week || 0;

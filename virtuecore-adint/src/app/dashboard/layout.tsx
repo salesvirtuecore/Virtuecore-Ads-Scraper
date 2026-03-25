@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import ui from "@/app/app-ui.module.css";
 import { TIER_LABELS, WEEKLY_SEARCH_LIMITS } from "@/lib/account";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { getEffectiveTier, getTrialStatus } from "@/lib/trial";
 
 import { DashboardProvider, type DashboardProfile } from "./dashboard-context";
 
@@ -24,6 +25,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState<DashboardProfile | null>(null);
+    const [rawTier, setRawTier] = useState<DashboardProfile["tier"]>("free");
+    const [signupDate, setSignupDate] = useState<string | null>(null);
 
     useEffect(() => {
         if (!supabase) {
@@ -31,7 +34,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             return;
         }
 
-        async function loadProfile(userId: string) {
+        async function loadProfile(userId: string, created?: string) {
             const p = await supabase!
                 .from("profiles")
                 .select("id, full_name, role, org_id, plan_tier, tier, searches_used_this_week, week_reset_at, email, business_name, industry")
@@ -39,10 +42,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 .single();
 
             if (!p.error && p.data) {
-                setProfile({
-                    ...(p.data as DashboardProfile),
-                    tier: (p.data.tier || "free") as DashboardProfile["tier"],
-                });
+                const stored = (p.data.tier || "free") as DashboardProfile["tier"];
+                const effective = created ? getEffectiveTier(stored, created) : stored;
+                setRawTier(stored);
+                if (created) setSignupDate(created);
+                setProfile({ ...(p.data as DashboardProfile), tier: effective });
             } else {
                 setProfile(null);
             }
@@ -52,7 +56,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         // Immediately check for an existing session (reads from cookie, no network call)
         supabase.auth.getSession().then(({ data: { session } }) => {
             if (session?.user?.id) {
-                loadProfile(session.user.id);
+                loadProfile(session.user.id, session.user.created_at);
             } else {
                 setProfile(null);
                 setLoading(false);
@@ -63,7 +67,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             (_event, session) => {
                 if (session?.user?.id) {
-                    loadProfile(session.user.id);
+                    loadProfile(session.user.id, session.user.created_at);
                 } else {
                     setProfile(null);
                     setLoading(false);
@@ -123,6 +127,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 ? ui.tierPro
                 : ui.tierClient;
 
+    const trial = signupDate ? getTrialStatus(rawTier, signupDate) : null;
+
     return (
         <DashboardProvider value={{ profile, setProfile }}>
             <main className={ui.dashboardShell}>
@@ -147,7 +153,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 <div className={ui.progressFill} style={{ width: `${usagePct}%` }} />
                             </div>
                         </div>
-                        {profile.tier === "free" && (
+                        {trial?.onTrial && (
+                            <div style={{
+                                background: "rgba(229,191,68,0.08)",
+                                border: "1px solid rgba(229,191,68,0.25)",
+                                borderRadius: 10,
+                                padding: "0.55rem 0.75rem",
+                                display: "grid",
+                                gap: "0.2rem",
+                            }}>
+                                <p style={{ margin: 0, color: "#e5bf44", fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                                    Free trial
+                                </p>
+                                <p style={{ margin: 0, color: "rgba(255,255,255,0.75)", fontSize: "0.82rem", lineHeight: 1.4 }}>
+                                    {trial.daysLeft} day{trial.daysLeft !== 1 ? "s" : ""} of <strong>{TIER_LABELS[trial.trialTier!]}</strong> left
+                                    {trial.nextTier && trial.nextTier !== "free" && ` · then ${TIER_LABELS[trial.nextTier]} for 3 days`}
+                                    {trial.nextTier === "free" && " · then free plan"}
+                                </p>
+                            </div>
+                        )}
+                        {!trial?.onTrial && profile.tier === "free" && (
                             <Link href="/dashboard/upgrade" className={ui.upgradeCta}>
                                 Upgrade to Pro
                             </Link>
