@@ -235,37 +235,36 @@ function PricingCard({
 }
 
 /* ----------- */
-export default function LandingSections({
-    howItWorks,
+export function FeatureCardsSection({ howItWorks }: { howItWorks: HowItWorksItem[] }) {
+    return (
+        <section style={{
+            width: "min(1100px, 92vw)",
+            margin: "0 auto 5rem",
+            display: "grid",
+            gap: "1.5rem",
+        }}>
+            <SectionHeading label="How it works" title="Three steps to competitor clarity." />
+            <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                gap: "1rem",
+            }}>
+                {howItWorks.map((item, i) => (
+                    <FeatureCard key={item.step} item={item} delay={i * 0.15} />
+                ))}
+            </div>
+        </section>
+    );
+}
+
+export function PricingSection({
     proFeatures,
     ultimateFeatures,
 }: {
-    howItWorks: HowItWorksItem[];
     proFeatures: PricingFeature[];
     ultimateFeatures: PricingFeature[];
 }) {
     return (
-        <>
-            {/* ----------- */}
-            <section style={{
-                width: "min(1100px, 92vw)",
-                margin: "0 auto 5rem",
-                display: "grid",
-                gap: "1.5rem",
-            }}>
-                <SectionHeading label="How it works" title="Three steps to competitor clarity." />
-                <div style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-                    gap: "1rem",
-                }}>
-                    {howItWorks.map((item, i) => (
-                        <FeatureCard key={item.step} item={item} delay={i * 0.15} />
-                    ))}
-                </div>
-            </section>
-
-            {/* ----------- */}
             <section style={{
                 width: "min(1100px, 92vw)",
                 margin: "0 auto 6rem",
@@ -437,6 +436,22 @@ export default function LandingSections({
                     </PricingCard>
                 </div>
             </section>
+    );
+}
+
+export default function LandingSections({
+    howItWorks,
+    proFeatures,
+    ultimateFeatures,
+}: {
+    howItWorks: HowItWorksItem[];
+    proFeatures: PricingFeature[];
+    ultimateFeatures: PricingFeature[];
+}) {
+    return (
+        <>
+            <FeatureCardsSection howItWorks={howItWorks} />
+            <PricingSection proFeatures={proFeatures} ultimateFeatures={ultimateFeatures} />
         </>
     );
 }

@@ -2,7 +2,8 @@ import Link from "next/link";
 
 import ui from "@/app/app-ui.module.css";
 import HeroSection from "@/app/_components/HeroSection";
-import LandingSections from "@/app/_components/LandingSections";
+import { FeatureCardsSection, PricingSection } from "@/app/_components/LandingSections";
+import DemoSection from "@/app/_components/DemoSection";
 
 type Props = {
     searchParams: Promise<{ billing?: string }>;
@@ -82,12 +83,14 @@ export default async function LandingPage({ searchParams }: Props) {
             {/* ── Hero ── */}
             <HeroSection />
 
-            {/* ── How it works + Pricing (scroll-animated) ── */}
-            <LandingSections
-                howItWorks={HOW_IT_WORKS}
-                proFeatures={PRO_FEATURES}
-                ultimateFeatures={ULTIMATE_FEATURES}
-            />
+            {/* ── How it works ── */}
+            <FeatureCardsSection howItWorks={HOW_IT_WORKS} />
+
+            {/* ── Product demo ── */}
+            <DemoSection />
+
+            {/* ── Pricing ── */}
+            <PricingSection proFeatures={PRO_FEATURES} ultimateFeatures={ULTIMATE_FEATURES} />
 
             {/* ── Footer ── */}
             <footer style={{
