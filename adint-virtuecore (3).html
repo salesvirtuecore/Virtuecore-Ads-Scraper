@@ -343,11 +343,6 @@ button,input,select{font-family:var(--fn)}
 <body>
 <div id="app"></div>
 <script>
-// ──────────────────────────────────────────────────────────
-// CONFIG — add your Anthropic key here before sharing
-// ──────────────────────────────────────────────────────────
-const ANTHROPIC_KEY = "YOUR_ANTHROPIC_KEY_HERE"; // sk-ant-...
-
 const APPROVED = [
   {email:"samuel@virtuecore.com", password:"VC2025!",  tokens:200, name:"Samuel", admin:true},
   {email:"caleb@virtuecore.com",  password:"VC2025!",  tokens:200, name:"Caleb",  admin:true},
@@ -366,7 +361,7 @@ const IND = {
 let S = {
   view:"login", user:null, tokens:0, startTokens:0,
   ads:[], selAds:[], analysisRaw:"", analysisData:null, analysisLoading:false,
-  metaToken:"", saved:false,
+  metaToken:"", anthropicKey:localStorage.getItem("adint_anthropic_key")||"", saved:false, savedAnthro:false,
   clientBiz:"", loginEmail:"", loginPass:"", loginErr:"",
   searchQuery:"", country:"GB", searchLoading:false,
   industry:"Service Business", customDays:90,
@@ -420,8 +415,8 @@ async function fetchAds(){
 // ANALYSIS
 // ──────────────────────────────────────────────────────────
 async function analyse(){
-  const apiKey = ANTHROPIC_KEY !== "YOUR_ANTHROPIC_KEY_HERE" ? ANTHROPIC_KEY : null;
-  if(!apiKey){alert("API key not configured. Open the HTML file in a text editor and replace YOUR_ANTHROPIC_KEY_HERE with your Anthropic API key.");return;}
+  const apiKey = S.anthropicKey || null;
+  if(!apiKey){alert("API key not configured. Go to Settings → AI Engine and enter your Anthropic API key.");return;}
   if(S.tokens<COSTS.analysis){alert(`Not enough tokens.`);return;}
   const ads=S.selAds, client=S.clientBiz||"the client", threshold=wd();
   set({analysisLoading:true,analysisRaw:"",analysisData:null,showReport:false,tokens:S.tokens-COSTS.analysis});
@@ -662,8 +657,10 @@ function rSettings(){return`
   <table class="utbl"><thead><tr><th>Name</th><th>Email</th><th>Tokens</th><th>Role</th></tr></thead>
   <tbody>${APPROVED.map(a=>`<tr><td>${a.name}</td><td><span class="mn">${a.email}</span></td><td><span class="mn">${a.tokens}</span></td><td><span class="rpill">${a.admin?"Admin":"Viewer"}</span></td></tr>`).join("")}</tbody></table>
   </div></div>
-  <div class="ss"><div class="ss-h"><div class="ss-t">AI Engine</div><span class="ss-bdg">CONFIGURED</span></div>
-  <div class="ss-b"><div class="ss-desc" style="margin:0">The intelligence engine is configured at the platform level. No configuration required — simply use the Ad Scanner to generate reports.</div></div></div>
+  <div class="ss"><div class="ss-h"><div class="ss-t">Anthropic API Key</div><span class="ss-bdg">${S.anthropicKey?"● CONFIGURED":"○ NOT SET"}</span></div>
+  <div class="ss-b"><div class="ss-desc">Required to generate intelligence reports. Your key is stored only in your browser's local storage — it is never sent anywhere except directly to Anthropic.<br><br>Get at <span class="ss-code">console.anthropic.com → API Keys</span></div>
+  <input class="akin" id="ak" type="password" placeholder="sk-ant-…" value="${S.anthropicKey}"/>
+  <div class="rbtns"><button class="sbtn" id="sak">Save Key</button>${S.savedAnthro?`<span class="svd">✓ Saved</span>`:""}</div></div></div>
   `:""}
 </div>`;}
 
@@ -842,6 +839,8 @@ function bindShell(){
   if(S.view==="settings"){
     const mt=document.getElementById("mt");if(mt)mt.oninput=e=>S.metaToken=e.target.value;
     const smt=document.getElementById("smt");if(smt)smt.onclick=()=>{const v=document.getElementById("mt")?.value||"";S.metaToken=v;set({saved:true});setTimeout(()=>set({saved:false}),3000);};
+    const ak=document.getElementById("ak");if(ak)ak.oninput=e=>S.anthropicKey=e.target.value;
+    const sak=document.getElementById("sak");if(sak)sak.onclick=()=>{const v=document.getElementById("ak")?.value||"";S.anthropicKey=v;localStorage.setItem("adint_anthropic_key",v);set({savedAnthro:true});setTimeout(()=>set({savedAnthro:false}),3000);};
     document.querySelectorAll("[data-ind]").forEach(el=>el.onclick=()=>set({industry:el.dataset.ind}));
     const cd=document.getElementById("cd");if(cd)cd.oninput=e=>S.customDays=e.target.value;
   }
