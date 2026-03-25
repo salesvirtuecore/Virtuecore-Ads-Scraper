@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import ui from "@/app/app-ui.module.css";
+import HeroSection from "@/app/_components/HeroSection";
 
 type Props = {
     searchParams: Promise<{ billing?: string }>;
@@ -78,81 +79,7 @@ export default async function LandingPage({ searchParams }: Props) {
             )}
 
             {/* ── Hero ── */}
-            <section style={{
-                width: "min(1100px, 92vw)",
-                margin: "5rem auto 4rem",
-                textAlign: "center",
-                display: "grid",
-                gap: "1.75rem",
-            }}>
-                <p style={{
-                    color: "rgba(229,191,68,0.85)",
-                    fontSize: "0.72rem",
-                    fontWeight: 700,
-                    letterSpacing: "0.2em",
-                    textTransform: "uppercase",
-                    margin: 0,
-                }}>
-                    VirtueCore · Ad Intelligence Platform
-                </p>
-
-                <h1 style={{
-                    fontSize: "clamp(2.4rem, 5.5vw, 4.2rem)",
-                    fontWeight: 800,
-                    lineHeight: 1.1,
-                    letterSpacing: "-0.02em",
-                    margin: 0,
-                    background: "linear-gradient(135deg, #ffffff 40%, rgba(229,191,68,0.85))",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    backgroundClip: "text",
-                }}>
-                    Know exactly what your<br />competitors are running —<br />and why it&apos;s working.
-                </h1>
-
-                <p style={{
-                    fontSize: "clamp(1rem, 2vw, 1.2rem)",
-                    color: "rgba(255,255,255,0.6)",
-                    lineHeight: 1.7,
-                    margin: "0 auto",
-                    maxWidth: 580,
-                }}>
-                    Scan the Meta Ads Library, identify ads that have been running for months (the profitable ones), and get a Claude-powered strategy report built around your brand.
-                </p>
-
-                <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
-                    <Link href="/auth/signup" style={{
-                        display: "inline-block",
-                        background: "linear-gradient(120deg, #f0cb54, #cc9519)",
-                        color: "#1e1703",
-                        fontWeight: 700,
-                        fontSize: "1rem",
-                        padding: "0.85rem 2rem",
-                        borderRadius: "12px",
-                        textDecoration: "none",
-                        letterSpacing: "0.01em",
-                    }}>
-                        Start for free →
-                    </Link>
-                    <Link href="/auth/login" style={{
-                        display: "inline-block",
-                        background: "rgba(255,255,255,0.07)",
-                        border: "1px solid rgba(255,255,255,0.18)",
-                        color: "#fff",
-                        fontWeight: 600,
-                        fontSize: "1rem",
-                        padding: "0.85rem 2rem",
-                        borderRadius: "12px",
-                        textDecoration: "none",
-                    }}>
-                        Sign in
-                    </Link>
-                </div>
-
-                <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.85rem", margin: 0 }}>
-                    Free plan available · No credit card required
-                </p>
-            </section>
+            <HeroSection />
 
             {/* ── How it works ── */}
             <section style={{
