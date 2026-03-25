@@ -31,27 +31,43 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             return;
         }
 
+        async function loadProfile(userId: string) {
+            const p = await supabase!
+                .from("profiles")
+                .select("id, full_name, role, org_id, plan_tier, tier, searches_used_this_week, week_reset_at, email, business_name, industry")
+                .eq("id", userId)
+                .single();
+
+            if (!p.error && p.data) {
+                setProfile({
+                    ...(p.data as DashboardProfile),
+                    tier: (p.data.tier || "free") as DashboardProfile["tier"],
+                });
+            } else {
+                setProfile(null);
+            }
+            setLoading(false);
+        }
+
+        // Immediately check for an existing session (reads from cookie, no network call)
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session?.user?.id) {
+                loadProfile(session.user.id);
+            } else {
+                setProfile(null);
+                setLoading(false);
+            }
+        });
+
+        // Also listen for future auth changes (sign-out, token refresh)
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            async (_event, session) => {
-                if (!session?.user?.id) {
+            (_event, session) => {
+                if (session?.user?.id) {
+                    loadProfile(session.user.id);
+                } else {
                     setProfile(null);
                     setLoading(false);
-                    return;
                 }
-
-                const p = await supabase
-                    .from("profiles")
-                    .select("id, full_name, role, org_id, plan_tier, tier, searches_used_this_week, week_reset_at, email, business_name, industry")
-                    .eq("id", session.user.id)
-                    .single();
-
-                if (!p.error && p.data) {
-                    setProfile({
-                        ...(p.data as DashboardProfile),
-                        tier: (p.data.tier || "free") as DashboardProfile["tier"],
-                    });
-                }
-                setLoading(false);
             }
         );
 
