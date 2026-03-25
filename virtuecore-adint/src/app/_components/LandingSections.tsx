@@ -77,36 +77,93 @@ function FeatureCard({ item, delay }: { item: HowItWorksItem; delay: number }) {
     return (
         <motion.div
             ref={ref}
-            initial={{ opacity: 0, y: 36 }}
-            animate={inView ? { opacity: 1, y: 0 } : {}}
+            initial={{ opacity: 0, y: 32, scale: 0.95 }}
+            animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}}
             transition={{ duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] }}
             whileHover={{
-                borderColor: "rgba(229,191,68,0.55)",
-                boxShadow: "0 0 28px rgba(229,191,68,0.1), 0 4px 24px rgba(0,0,0,0.45)",
+                scale: 1.02,
+                borderColor: "rgba(255,255,255,0.2)",
+                boxShadow: "0 0 32px rgba(229,191,68,0.08), 0 8px 32px rgba(0,0,0,0.5)",
             }}
             style={{
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 16,
-                padding: "1.75rem",
+                position: "relative",
+                background: "rgba(255,255,255,0.05)",
+                backdropFilter: "blur(12px)",
+                WebkitBackdropFilter: "blur(12px)",
+                border: "1px solid rgba(255,255,255,0.09)",
+                borderRadius: 20,
+                padding: "2rem",
                 display: "grid",
-                gap: "0.75rem",
-                transition: "border-color 0.25s ease, box-shadow 0.25s ease",
+                gap: "1rem",
+                overflow: "hidden",
                 cursor: "default",
+                transition: "border-color 0.3s ease, box-shadow 0.3s ease",
             }}
         >
-            <span style={{
-                color: "rgba(229,191,68,0.5)",
-                fontSize: "0.75rem",
-                fontWeight: 800,
-                letterSpacing: "0.15em",
-            }}>
+            {/* Watermark number */}
+            <span
+                aria-hidden="true"
+                style={{
+                    position: "absolute",
+                    top: "-0.1em",
+                    right: "0.5rem",
+                    fontSize: "7rem",
+                    fontWeight: 900,
+                    lineHeight: 1,
+                    color: "rgba(229,191,68,0.06)",
+                    letterSpacing: "-0.04em",
+                    userSelect: "none",
+                    pointerEvents: "none",
+                    fontFamily: "var(--font-display, Georgia, serif)",
+                }}
+            >
                 {item.step}
             </span>
-            <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: 700 }}>{item.title}</h3>
-            <p style={{ margin: 0, color: "rgba(255,255,255,0.55)", lineHeight: 1.65, fontSize: "0.95rem" }}>
-                {item.body}
-            </p>
+
+            {/* Content */}
+            <div style={{ position: "relative", display: "grid", gap: "0.85rem" }}>
+                {/* Step indicator + title row */}
+                <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+                    {/* Amber dot */}
+                    <span style={{
+                        display: "inline-block",
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        background: "#e5bf44",
+                        boxShadow: "0 0 8px rgba(229,191,68,0.7)",
+                        flexShrink: 0,
+                    }} />
+                    <span style={{
+                        color: "rgba(229,191,68,0.7)",
+                        fontSize: "0.7rem",
+                        fontWeight: 800,
+                        letterSpacing: "0.18em",
+                        textTransform: "uppercase",
+                    }}>
+                        {item.step}
+                    </span>
+                </div>
+
+                <h3 style={{
+                    margin: 0,
+                    fontSize: "1.2rem",
+                    fontWeight: 700,
+                    letterSpacing: "-0.01em",
+                    lineHeight: 1.3,
+                }}>
+                    {item.title}
+                </h3>
+
+                <p style={{
+                    margin: 0,
+                    color: "rgba(255,255,255,0.6)",
+                    lineHeight: 1.7,
+                    fontSize: "1rem",
+                }}>
+                    {item.body}
+                </p>
+            </div>
         </motion.div>
     );
 }
