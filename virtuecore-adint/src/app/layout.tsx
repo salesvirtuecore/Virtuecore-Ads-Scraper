@@ -24,7 +24,12 @@ const mono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "VirtueCore Ad Intelligence",
   description: "Invitation-only competitive ad intelligence by VirtueCore.",
-  icons: { icon: "/favicon.ico" },
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+  },
 };
 
 export default function RootLayout({
