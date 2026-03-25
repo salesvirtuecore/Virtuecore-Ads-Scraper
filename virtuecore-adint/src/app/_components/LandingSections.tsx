@@ -4,11 +4,11 @@ import Link from "next/link";
 import { motion, useInView } from "framer-motion";
 import { useRef, useEffect, useState } from "react";
 
-/* ─── Types ──────────────────────────────────────────────────── */
+/* ----------- */
 type HowItWorksItem = { step: string; title: string; body: string };
 type PricingFeature = string;
 
-/* ─── Reusable fade-up wrapper ───────────────────────────────── */
+/* ----------- */
 function FadeUp({
     children,
     delay = 0,
@@ -34,7 +34,7 @@ function FadeUp({
     );
 }
 
-/* ─── Section heading ────────────────────────────────────────── */
+/* ----------- */
 function SectionHeading({ label, title, subtitle }: { label: string; title: string; subtitle?: string }) {
     const ref = useRef<HTMLDivElement>(null);
     const inView = useInView(ref, { once: true, margin: "-60px 0px" });
@@ -69,7 +69,7 @@ function SectionHeading({ label, title, subtitle }: { label: string; title: stri
     );
 }
 
-/* ─── Animated feature card ──────────────────────────────────── */
+/* ----------- */
 function FeatureCard({ item, delay }: { item: HowItWorksItem; delay: number }) {
     const ref = useRef<HTMLDivElement>(null);
     const inView = useInView(ref, { once: true, margin: "-60px 0px" });
@@ -111,7 +111,7 @@ function FeatureCard({ item, delay }: { item: HowItWorksItem; delay: number }) {
     );
 }
 
-/* ─── Count-up number ────────────────────────────────────────── */
+/* ----------- */
 function CountUp({ value, prefix = "", suffix = "" }: { value: number; prefix?: string; suffix?: string }) {
     const ref = useRef<HTMLSpanElement>(null);
     const inView = useInView(ref, { once: true, margin: "-40px 0px" });
@@ -139,7 +139,7 @@ function CountUp({ value, prefix = "", suffix = "" }: { value: number; prefix?: 
     );
 }
 
-/* ─── Pricing card ───────────────────────────────────────────── */
+/* ----------- */
 function PricingCard({
     delay,
     children,
@@ -177,7 +177,7 @@ function PricingCard({
     );
 }
 
-/* ─── Main export ────────────────────────────────────────────── */
+/* ----------- */
 export default function LandingSections({
     howItWorks,
     proFeatures,
@@ -189,7 +189,7 @@ export default function LandingSections({
 }) {
     return (
         <>
-            {/* ── How it works ── */}
+            {/* ----------- */}
             <section style={{
                 width: "min(1100px, 92vw)",
                 margin: "0 auto 5rem",
@@ -208,7 +208,7 @@ export default function LandingSections({
                 </div>
             </section>
 
-            {/* ── Pricing ── */}
+            {/* ----------- */}
             <section style={{
                 width: "min(1100px, 92vw)",
                 margin: "0 auto 6rem",

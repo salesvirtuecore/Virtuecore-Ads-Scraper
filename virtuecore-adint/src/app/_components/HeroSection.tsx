@@ -4,7 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useEffect, useRef } from "react";
 
-/* ─── Animated dot-grid canvas ──────────────────────────────── */
+/* ----------- */
 function DotGrid() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -79,7 +79,7 @@ function DotGrid() {
     );
 }
 
-/* ─── Animated label pill ────────────────────────────────────── */
+/* ----------- */
 function LiveLabel() {
     return (
         <motion.div
@@ -146,7 +146,7 @@ function LiveLabel() {
     );
 }
 
-/* ─── Staggered headline ─────────────────────────────────────── */
+/* ----------- */
 type Word = { text: string; gold: boolean };
 
 const LINES: Word[][] = [
@@ -226,7 +226,7 @@ function AnimatedHeadline() {
     );
 }
 
-/* ─── Shimmer CTA button ─────────────────────────────────────── */
+/* ----------- */
 function ShimmerButton() {
     return (
         <motion.div
@@ -292,7 +292,7 @@ function ShimmerButton() {
     );
 }
 
-/* ─── Exported hero section ──────────────────────────────────── */
+/* ----------- */
 export default function HeroSection() {
     return (
         <section
