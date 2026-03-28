@@ -13,7 +13,7 @@
       ]
     }
   },
-  "postCreateCommand": "echo \"Dev container ready.\"",
-  "updateContentCommand": "true",
+  "postCreateCommand": "git submodule update --init --recursive || true && echo \"Dev container ready.\"",
+  "updateContentCommand": "git submodule update --remote --recursive || true",
   "remoteUser": "vscode"
 }

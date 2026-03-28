@@ -1,0 +1,7 @@
+[submodule "Virtuecore-VA-Marketplace"]
+	path = Virtuecore-VA-Marketplace
+	url = https://github.com/salesvirtuecore/Virtuecore-VA-Marketplace.git
+
+[submodule "Virtuecore-Website"]
+	path = Virtuecore-Website
+	url = https://github.com/salesvirtuecore/Virtuecore-Website.git
