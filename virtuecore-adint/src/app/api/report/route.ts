@@ -219,7 +219,7 @@ export async function POST(req: NextRequest) {
     const tokensOutput = Number(usage?.output_tokens || 0);
 
     const insertRes = await supabase
-        .from("reports")
+        .from("adint_reports")
         .insert({
             org_id: profileRes.data.org_id,
             created_by: userId,

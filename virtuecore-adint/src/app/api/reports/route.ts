@@ -28,7 +28,7 @@ export async function GET() {
     const historyLimit = isAdmin ? 100 : profile.data.tier === "free" ? 5 : 30;
 
     let query = supabase
-        .from("reports")
+        .from("adint_reports")
         .select("id, report_type, content, raw_content, industry, threshold_days, ads_analyzed, created_at")
         .order("created_at", { ascending: false })
         .limit(historyLimit);

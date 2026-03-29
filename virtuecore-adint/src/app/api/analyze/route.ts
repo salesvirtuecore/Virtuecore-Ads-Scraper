@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
             event_type: "analysis",
         });
 
-        await supabase.from("reports").insert({
+        await supabase.from("adint_reports").insert({
             org_id: orgId,
             created_by: userId,
             user_id: userId,
