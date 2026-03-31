@@ -74,33 +74,34 @@ export async function POST(req: NextRequest) {
     try {
         const data = await generateAnalysis(parsed.data);
 
-        await supabase.from("usage_events").insert({
-            org_id: orgId,
-            user_id: userId,
-            event_type: "analysis",
-        });
-
-        await supabase.from("adint_reports").insert({
-            org_id: orgId,
-            created_by: userId,
-            user_id: userId,
-            search_id: parsed.data.searchId || null,
-            report_type: parsed.data.reportType,
-            content: data.parsed || { raw: data.raw },
-            raw_content: data.raw,
-            industry: parsed.data.industry,
-            threshold_days: parsed.data.thresholdDays,
-            ads_analyzed: parsed.data.ads.length,
-            tokens_input: 0,
-            tokens_output: 0,
-            client_business: parsed.data.clientBiz,
-            scan_query: parsed.data.scanQuery,
-            payload: data.parsed,
-            raw_text: data.raw,
-        });
+        await Promise.all([
+            supabase.from("usage_events").insert({
+                org_id: orgId,
+                user_id: userId,
+                event_type: "analysis",
+            }),
+            supabase.from("adint_reports").insert({
+                org_id: orgId,
+                created_by: userId,
+                user_id: userId,
+                search_id: parsed.data.searchId || null,
+                report_type: parsed.data.reportType,
+                content: data.parsed || { raw: data.raw },
+                raw_content: data.raw,
+                industry: parsed.data.industry,
+                threshold_days: parsed.data.thresholdDays,
+                ads_analyzed: parsed.data.ads.length,
+                tokens_input: 0,
+                tokens_output: 0,
+                client_business: parsed.data.clientBiz,
+                scan_query: parsed.data.scanQuery,
+                payload: data.parsed,
+                raw_text: data.raw,
+            }),
+        ]);
 
         return NextResponse.json(data);
-    } catch (error: any) {
-        return NextResponse.json({ error: error?.message || "Analysis failed." }, { status: 500 });
+    } catch (error: unknown) {
+        return NextResponse.json({ error: error instanceof Error ? error.message : "Analysis failed." }, { status: 500 });
     }
 }

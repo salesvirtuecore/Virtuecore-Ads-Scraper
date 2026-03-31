@@ -125,24 +125,25 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: profileUpdate.error.message }, { status: 500 });
     }
 
-    await supabase.from("usage_events").insert({
-        org_id: orgId,
-        user_id: userId,
-        event_type: "scan",
-    });
-
-    const searchInsert = await supabase
-        .from("searches")
-        .insert({
+    const [, searchInsert] = await Promise.all([
+        supabase.from("usage_events").insert({
+            org_id: orgId,
             user_id: userId,
-            query,
-            country,
-            results_count: ads.length,
-            provenance: meta.source,
-            ads_data: ads,
-        })
-        .select("id")
-        .single();
+            event_type: "scan",
+        }),
+        supabase
+            .from("searches")
+            .insert({
+                user_id: userId,
+                query,
+                country,
+                results_count: ads.length,
+                provenance: meta.source,
+                ads_data: ads,
+            })
+            .select("id")
+            .single(),
+    ]);
 
     if (!searchInsert.error && searchInsert.data) {
         searchId = searchInsert.data.id;

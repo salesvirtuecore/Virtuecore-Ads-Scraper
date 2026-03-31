@@ -37,7 +37,7 @@ export async function generateAnalysis(args: {
         throw new Error(data?.error?.message || "Anthropic request failed.");
     }
 
-    const raw = (data.content || []).map((b: any) => b?.text || "").join("");
+    const raw = (data.content || []).map((b: { type: string; text?: string }) => b?.text ?? "").join("");
     let parsed = null;
     try {
         parsed = JSON.parse(raw.replace(/```json|```/g, "").trim());

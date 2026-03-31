@@ -1,5 +1,16 @@
 import type { AdRecord, ScanMeta } from "@/lib/types";
 
+interface MetaAdRaw {
+    id?: string;
+    page_name?: string;
+    ad_creative_bodies?: string[];
+    ad_delivery_start_time?: string;
+    spend?: { lower_bound: string; upper_bound: string };
+    ad_creative_link_titles?: string[];
+    publisher_platforms?: string[];
+    ad_snapshot_url?: string;
+}
+
 type ScanArgs = {
     query: string;
     country: string;
@@ -61,7 +72,7 @@ export async function fetchMetaAds({ query, country, metaToken, cap }: ScanArgs)
                 };
             }
 
-            const rows = (data.data || []).map((a: any, i: number) => {
+            const rows = (data.data || []).map((a: MetaAdRaw, i: number) => {
                 const id = String(a.id || `${Date.now()}-${i}`);
                 return {
                     id,
@@ -104,7 +115,7 @@ export async function fetchMetaAds({ query, country, metaToken, cap }: ScanArgs)
                 error: "",
             },
         };
-    } catch (error: any) {
+    } catch (error: unknown) {
         return {
             ads: [],
             meta: {
@@ -114,7 +125,7 @@ export async function fetchMetaAds({ query, country, metaToken, cap }: ScanArgs)
                 query,
                 country,
                 fetchedAt,
-                error: error?.message || "Unexpected Meta API error.",
+                error: error instanceof Error ? error.message : "Unexpected Meta API error.",
             },
         };
     }
