@@ -49,9 +49,9 @@
             "position": [520, 340],
             "continueOnFail": true,
             "credentials": {
-                "googleSheetsOAuth2Api": {
-                    "id": "CONFIGURE_GOOGLE_SHEETS_CREDENTIAL",
-                    "name": "Google Sheets"
+                "googleApi": {
+                    "id": "CONFIGURE_GOOGLE_SERVICE_ACCOUNT",
+                    "name": "Google Service Account"
                 }
             }
         },
@@ -207,9 +207,9 @@
             "position": [2040, 340],
             "continueOnFail": true,
             "credentials": {
-                "googleSheetsOAuth2Api": {
-                    "id": "CONFIGURE_GOOGLE_SHEETS_CREDENTIAL",
-                    "name": "Google Sheets"
+                "googleApi": {
+                    "id": "CONFIGURE_GOOGLE_SERVICE_ACCOUNT",
+                    "name": "Google Service Account"
                 }
             }
         },
