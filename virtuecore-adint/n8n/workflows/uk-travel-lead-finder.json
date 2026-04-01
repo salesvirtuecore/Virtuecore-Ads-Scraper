@@ -1,0 +1,214 @@
+{
+    "name": "UK Travel Company Lead Finder – Meta Pixel + Lapsed Ad Spend",
+    "nodes": [
+        {
+            "parameters": {},
+            "id": "node_manual_trigger",
+            "name": "Run Manually",
+            "type": "n8n-nodes-base.manualTrigger",
+            "typeVersion": 1,
+            "position": [240, 280]
+        },
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "weeks",
+                            "weeksInterval": 1,
+                            "triggerAtDay": [1],
+                            "triggerAtHour": 8,
+                            "triggerAtMinute": 0
+                        }
+                    ]
+                }
+            },
+            "id": "node_schedule_trigger",
+            "name": "Run Weekly (Mon 8am)",
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1.2,
+            "position": [240, 420]
+        },
+        {
+            "parameters": {
+                "mode": "runOnceForAllItems",
+                "jsCode": "/* ============================================================\n   DISCOVER UK TRAVEL COMPANIES\n   Uses SerpAPI (Google) to find UK travel company websites.\n   Required env var: SERPAPI_KEY\n   Falls back to a seed list if SERPAPI_KEY is not set.\n   ============================================================ */\nconst serpApiKey = $env.SERPAPI_KEY || '';\n\nconst searchQueries = [\n  'UK travel agency tour operator holidays site:co.uk',\n  'UK independent tour operator package holidays',\n  'UK travel company luxury beach holidays',\n  'UK adventure travel company tours',\n  'UK group travel holidays operator',\n  'UK family holiday travel company',\n  'UK coach holiday company tours',\n  'UK ski holiday specialist operator',\n  'UK walking cycling holiday company',\n  'UK cruise holiday specialist',\n  'UK honeymoon travel company',\n  'UK safari holiday operator'\n];\n\n// Domains to skip (aggregators, OTAs, social, directories)\nconst skipPatterns = [\n  'tripadvisor', 'trustpilot', 'google', 'facebook', 'wikipedia',\n  'yelp', 'indeed', 'linkedin', 'twitter', 'instagram', 'youtube',\n  'booking.com', 'expedia', 'airbnb', 'loveholidays', 'on-the-beach',\n  'jet2.', 'tui.', 'firstchoice', 'easyjet', 'ryanair', 'thomascook',\n  'lastminute', 'kayak', 'skyscanner', 'holidaypirates', 'dealchecker'\n];\n\nconst companies = [];\nconst seenDomains = new Set();\n\nif (serpApiKey) {\n  for (const query of searchQueries) {\n    try {\n      const url = `https://serpapi.com/search?api_key=${encodeURIComponent(serpApiKey)}&engine=google&q=${encodeURIComponent(query)}&num=10&gl=uk&hl=en`;\n      const res = await fetch(url, { signal: AbortSignal.timeout(15000) });\n      if (!res.ok) continue;\n      const data = await res.json();\n      for (const result of (data.organic_results || [])) {\n        try {\n          const link = result.link || '';\n          if (!link.startsWith('http')) continue;\n          const hostname = new URL(link).hostname.replace(/^www\\./, '');\n          if (seenDomains.has(hostname)) continue;\n          if (skipPatterns.some(p => hostname.includes(p))) continue;\n          seenDomains.add(hostname);\n          // Extract a clean company name from the page title\n          const rawTitle = result.title || hostname;\n          const name = rawTitle\n            .split(/ [-–|:] /)[0]\n            .replace(/\\(.*?\\)/g, '')\n            .trim();\n          companies.push({ name, domain: hostname, website: link });\n        } catch {}\n      }\n    } catch {}\n  }\n}\n\n// Fallback: small seed list for testing when SERPAPI_KEY is not set\nif (companies.length === 0) {\n  return [\n    { json: { name: 'Intrepid Travel', domain: 'intrepidtravel.com', website: 'https://www.intrepidtravel.com' } },\n    { json: { name: 'Kuoni UK', domain: 'kuoni.co.uk', website: 'https://www.kuoni.co.uk' } },\n    { json: { name: 'Cox and Kings', domain: 'coxandkings.co.uk', website: 'https://www.coxandkings.co.uk' } },\n    { json: { name: 'Exodus Travels', domain: 'exodustravels.com', website: 'https://www.exodustravels.com' } },\n    { json: { name: 'Neilson Holidays', domain: 'neilson.co.uk', website: 'https://www.neilson.co.uk' } }\n  ];\n}\n\nreturn companies.map(c => ({ json: c }));"
+            },
+            "id": "node_discover",
+            "name": "Discover UK Travel Companies",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [520, 340]
+        },
+        {
+            "parameters": {
+                "compare": "selectedFields",
+                "fieldsToCompare": {
+                    "fields": [
+                        { "fieldName": "domain" }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "node_dedup",
+            "name": "Remove Duplicate Domains",
+            "type": "n8n-nodes-base.removeDuplicates",
+            "typeVersion": 1,
+            "position": [780, 340]
+        },
+        {
+            "parameters": {
+                "mode": "runOnceForEachItem",
+                "jsCode": "/* ============================================================\n   ANALYSE EACH COMPANY\n   Step 1 – Firecrawl: scrape the website, detect Meta Pixel ID\n             and social media presence.\n   Step 2 – Apify (Meta Ad Library): check for active / lapsed ads.\n             Uses the same Apify actor as the main app.\n   Step 3 – Qualify as a warm outreach lead.\n\n   Required env vars:\n     FIRECRAWL_API_KEY  – from https://firecrawl.dev\n     APIFY_API_KEY      – from https://apify.com\n   ============================================================ */\nconst company      = $json;\nconst firecrawlKey = $env.FIRECRAWL_API_KEY || '';\nconst apifyKey     = $env.APIFY_API_KEY     || '';\n\n// Apify actor: same as used by the main app's search/route.ts\nconst APIFY_ACTOR_ID = 'ZQyDz7154hrOfrDMK';\n\n// ──────────────────────────────────────────────────────────────\n// STEP 1 – Firecrawl website scrape\n// ──────────────────────────────────────────────────────────────\nlet html            = '';\nlet pageTitle       = '';\nlet pageDescription = '';\nlet scrapeSuccess   = false;\nlet scrapeError     = '';\n\nif (firecrawlKey && company.website) {\n  try {\n    const fcRes = await fetch('https://api.firecrawl.dev/v1/scrape', {\n      method: 'POST',\n      headers: {\n        'Authorization': `Bearer ${firecrawlKey}`,\n        'Content-Type': 'application/json',\n      },\n      body: JSON.stringify({\n        url: company.website,\n        formats: ['html'],\n        waitFor: 2000,\n      }),\n      signal: AbortSignal.timeout(35000),\n    });\n    if (fcRes.ok) {\n      const fc = await fcRes.json();\n      html            = fc?.data?.html        || '';\n      pageTitle       = fc?.data?.metadata?.title       || '';\n      pageDescription = fc?.data?.metadata?.description || '';\n      scrapeSuccess   = fc?.success === true;\n    } else {\n      scrapeError = `HTTP ${fcRes.status}`;\n    }\n  } catch (e) {\n    scrapeError = String(e?.message || 'Firecrawl timeout/error');\n  }\n}\n\n// ──────────────────────────────────────────────────────────────\n// STEP 2 – Detect Meta Pixel ID in the scraped HTML\n// ──────────────────────────────────────────────────────────────\nconst pixelPatterns = [\n  /fbq\\s*\\(\\s*['\"]init['\"]\\s*,\\s*['\"]?(\\d{10,16})['\"]?/i,\n  /\"pixelId\"\\s*:\\s*\"(\\d{10,16})\"/i,\n  /facebook\\.com\\/tr\\?id=(\\d{10,16})/i,\n  /'pixel_id'\\s*:\\s*'(\\d{10,16})'/i,\n  /fbPixelId[^\\d]+(\\d{10,16})/i,\n];\nlet pixelId = null;\nfor (const pattern of pixelPatterns) {\n  const match = html.match(pattern);\n  if (match) { pixelId = match[1]; break; }\n}\n\n// Detect social presence signals in the HTML\nconst hasFacebook  = /facebook\\.com\\/(?!sharer|share|dialog|plugins)[a-zA-Z0-9./_-]{3,}/.test(html);\nconst hasInstagram = /instagram\\.com\\/[a-zA-Z0-9._]{3,}/.test(html);\nconst hasTiktok    = /tiktok\\.com\\/@[a-zA-Z0-9._]{2,}/.test(html);\nconst hasTwitter   = /(?:twitter|x)\\.com\\/[a-zA-Z0-9_]{3,}/.test(html);\n\n// ──────────────────────────────────────────────────────────────\n// STEP 3 – Meta Ad Library check via Apify\n// ──────────────────────────────────────────────────────────────\nlet hasActiveAds         = false;\nlet hasRecentInactiveAds = false;\nlet totalAdsFound        = 0;\nlet mostRecentAdDate     = null;\nlet adSamples            = [];\nlet adLibraryError       = '';\n\nif (apifyKey) {\n  try {\n    // Build the same Facebook Ad Library URL that the main app uses\n    const libraryUrl = [\n      'https://www.facebook.com/ads/library/',\n      '?active_status=all',\n      '&ad_type=all',\n      '&country=GB',\n      `&q=${encodeURIComponent(company.name)}`,\n      '&search_type=keyword_unordered',\n      '&media_type=all',\n    ].join('');\n\n    // Start the Apify run (waitForFinish=90 polls until done or 90s)\n    const runRes = await fetch(\n      `https://api.apify.com/v2/acts/${APIFY_ACTOR_ID}/runs?waitForFinish=90`,\n      {\n        method: 'POST',\n        headers: {\n          'Content-Type': 'application/json',\n          'Authorization': `Bearer ${apifyKey}`,\n        },\n        body: JSON.stringify({ startUrls: [{ url: libraryUrl }], maxResults: 25 }),\n        signal: AbortSignal.timeout(100000),\n      }\n    );\n\n    const runData = await runRes.json();\n    if (!runRes.ok || runData?.error) {\n      adLibraryError = runData?.error?.message || 'Apify run failed';\n    } else {\n      const datasetId = runData?.data?.defaultDatasetId;\n      if (!datasetId) {\n        adLibraryError = 'No Apify dataset returned';\n      } else {\n        const itemsRes = await fetch(\n          `https://api.apify.com/v2/datasets/${datasetId}/items?limit=25`,\n          { headers: { 'Authorization': `Bearer ${apifyKey}` }, signal: AbortSignal.timeout(20000) }\n        );\n        const items = await itemsRes.json();\n\n        if (Array.isArray(items)) {\n          totalAdsFound = items.length;\n          const twelveMonthsAgo = Date.now() - 365 * 24 * 60 * 60 * 1000;\n\n          for (const ad of items) {\n            // Active ad = no endDate\n            if (!ad.endDate) hasActiveAds = true;\n            const startMs = ad.startDate ? new Date(ad.startDate).getTime() : 0;\n            if (startMs > twelveMonthsAgo) hasRecentInactiveAds = true;\n            if (!mostRecentAdDate || startMs > new Date(mostRecentAdDate).getTime()) {\n              mostRecentAdDate = ad.startDate || null;\n            }\n          }\n\n          // Top 3 ad samples for context\n          adSamples = items.slice(0, 3).map(ad => ({\n            id:          String(ad.adArchiveID || ''),\n            pageName:    ad.pageName || '',\n            body:        (ad.adCreativeBodies || [])[0] || '',\n            status:      ad.adStatus || (ad.endDate ? 'INACTIVE' : 'ACTIVE'),\n            startDate:   ad.startDate  || null,\n            endDate:     ad.endDate    || null,\n            platforms:   ad.publisherPlatforms || [],\n            snapshotUrl: ad.adSnapshotUrl || '',\n          }));\n        }\n      }\n    }\n  } catch (e) {\n    adLibraryError = String(e?.message || 'Apify error');\n  }\n}\n\n// ──────────────────────────────────────────────────────────────\n// STEP 4 – Lead qualification\n// Warm lead profile:\n//   ✅ Has Meta Pixel (they track digital conversions)\n//   ✅ NOT currently running active Meta ads (spending gap = opportunity)\n//   ✅ Evidence of past ad activity OR strong social presence\n//      (they understand digital marketing, just not spending right now)\n// ──────────────────────────────────────────────────────────────\nconst hasPixel          = !!pixelId;\nconst hasSocialPresence = hasFacebook || hasInstagram || hasTiktok;\nconst hadAdsHistory     = totalAdsFound > 0;\n\nconst isQualified = hasPixel && !hasActiveAds && (hadAdsHistory || hasSocialPresence);\n\n// Score the lead (max 100)\nlet leadScore = 0;\nif (hasPixel)              leadScore += 35; // Highest signal: they set up tracking\nif (!hasActiveAds)         leadScore += 15; // Not spending = open to outreach\nif (hasRecentInactiveAds)  leadScore += 30; // Recent lapse = strong buying intent\nif (hadAdsHistory && !hasRecentInactiveAds) leadScore += 10; // Older history\nif (hasFacebook)           leadScore += 5;\nif (hasInstagram)          leadScore += 5;\n\nconst reasonParts = [];\nif (hasPixel)                               reasonParts.push(`Meta Pixel found (ID: ${pixelId})`);\nif (hasRecentInactiveAds)                   reasonParts.push('ran Meta ads within last 12 months');\nif (hadAdsHistory && !hasRecentInactiveAds) reasonParts.push(`${totalAdsFound} historical Meta ad(s)`);\nif (!hasActiveAds && hadAdsHistory)         reasonParts.push('currently not running any ads');\nif (hasFacebook)                            reasonParts.push('Facebook page linked on site');\nif (hasInstagram)                           reasonParts.push('Instagram linked on site');\nif (!pixelId && scrapeSuccess)              reasonParts.push('no Meta Pixel detected');\n\nreturn [{\n  json: {\n    // Company\n    company_name:             company.name,\n    domain:                   company.domain,\n    website:                  company.website,\n    page_title:               pageTitle,\n    page_description:         pageDescription,\n    // Meta Pixel\n    pixel_id:                 pixelId,\n    has_pixel:                hasPixel,\n    // Social\n    has_facebook:             hasFacebook,\n    has_instagram:            hasInstagram,\n    has_tiktok:               hasTiktok,\n    has_twitter:              hasTwitter,\n    // Ad Library\n    has_active_ads:           hasActiveAds,\n    has_recent_inactive_ads:  hasRecentInactiveAds,\n    total_ads_found:          totalAdsFound,\n    most_recent_ad_date:      mostRecentAdDate,\n    ad_samples:               adSamples,\n    ad_library_error:         adLibraryError,\n    // Lead score\n    is_qualified:             isQualified,\n    lead_score:               leadScore,\n    lead_reason:              reasonParts.join(' | ') || 'Does not meet criteria',\n    // Debug\n    scrape_success:           scrapeSuccess,\n    scrape_error:             scrapeError,\n    analysed_at:              new Date().toISOString(),\n  }\n}];"
+            },
+            "id": "node_analyse",
+            "name": "Analyse Company",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [1040, 340],
+            "continueOnFail": true
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "strict",
+                        "version": 2
+                    },
+                    "conditions": [
+                        {
+                            "id": "cond_qualified",
+                            "leftValue": "={{ $json.is_qualified }}",
+                            "rightValue": true,
+                            "operator": {
+                                "type": "boolean",
+                                "operation": "equals"
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "options": {}
+            },
+            "id": "node_filter",
+            "name": "Qualified Leads Only",
+            "type": "n8n-nodes-base.filter",
+            "typeVersion": 2,
+            "position": [1300, 340]
+        },
+        {
+            "parameters": {
+                "sortFieldsUi": {
+                    "sortField": [
+                        {
+                            "fieldName": "lead_score",
+                            "order": "descending"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "id": "node_sort",
+            "name": "Sort by Lead Score",
+            "type": "n8n-nodes-base.sort",
+            "typeVersion": 1,
+            "position": [1540, 340]
+        },
+        {
+            "parameters": {
+                "mode": "runOnceForEachItem",
+                "jsCode": "/* ============================================================\n   FORMAT LEAD RECORD\n   Produces a clean, CRM-friendly object for each qualified lead.\n   Extend this node to push rows to Airtable, Google Sheets,\n   HubSpot, Pipedrive, Slack, etc.\n   ============================================================ */\nconst d = $json;\n\nconst adStatus =\n  d.has_recent_inactive_ads ? 'Ran ads < 12 months ago (inactive now)'\n  : d.total_ads_found > 0   ? `${d.total_ads_found} historical ad(s), no recent activity`\n  :                           'No Meta ad history found';\n\nreturn [{\n  json: {\n    // ── Core identifiers ──────────────────────────────────────\n    company_name:     d.company_name,\n    website:          d.website,\n    domain:           d.domain,\n    // ── Lead quality ─────────────────────────────────────────\n    lead_score:       d.lead_score,\n    lead_reason:      d.lead_reason,\n    // ── Meta Pixel ───────────────────────────────────────────\n    pixel_id:         d.pixel_id || '',\n    has_pixel:        d.has_pixel,\n    // ── Ad Library summary ───────────────────────────────────\n    ad_status_summary:       adStatus,\n    has_active_ads:          d.has_active_ads,\n    has_recent_inactive_ads: d.has_recent_inactive_ads,\n    total_ads_found:         d.total_ads_found,\n    most_recent_ad_date:     d.most_recent_ad_date || '',\n    // ── Social presence ──────────────────────────────────────\n    has_facebook:    d.has_facebook,\n    has_instagram:   d.has_instagram,\n    has_tiktok:      d.has_tiktok,\n    // ── Page meta ────────────────────────────────────────────\n    page_title:       d.page_title,\n    page_description: d.page_description,\n    // ── Top ad sample (for outreach context) ─────────────────\n    top_ad_body:      (d.ad_samples && d.ad_samples[0]) ? d.ad_samples[0].body  : '',\n    top_ad_page:      (d.ad_samples && d.ad_samples[0]) ? d.ad_samples[0].pageName : '',\n    top_ad_snapshot:  (d.ad_samples && d.ad_samples[0]) ? d.ad_samples[0].snapshotUrl : '',\n    // ── Timestamps ───────────────────────────────────────────\n    analysed_at:     d.analysed_at,\n    // ── Full raw payload (useful for further processing) ─────\n    _raw:            d,\n  }\n}];"
+            },
+            "id": "node_format",
+            "name": "Format Lead Record",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [1780, 340]
+        },
+        {
+            "parameters": {
+                "aggregate": "aggregateAllItemData",
+                "destinationFieldName": "leads",
+                "options": {}
+            },
+            "id": "node_aggregate",
+            "name": "Aggregate All Leads",
+            "type": "n8n-nodes-base.aggregate",
+            "typeVersion": 1,
+            "position": [2020, 340]
+        },
+        {
+            "parameters": {
+                "mode": "runOnceForAllItems",
+                "jsCode": "/* ============================================================\n   BUILD SUMMARY REPORT\n   Produces a single object with the full lead list,\n   top-10 by score, and headline stats ready for Slack,\n   email, Google Sheets, Airtable, etc.\n   ============================================================ */\nconst leads = ($json.leads || []).map(l => l._raw || l);\n\nconst stats = {\n  total_qualified_leads:    leads.length,\n  with_pixel:               leads.filter(l => l.has_pixel).length,\n  with_recent_ad_history:   leads.filter(l => l.has_recent_inactive_ads).length,\n  no_ad_history:            leads.filter(l => l.total_ads_found === 0).length,\n  with_facebook:            leads.filter(l => l.has_facebook).length,\n  with_instagram:           leads.filter(l => l.has_instagram).length,\n  avg_lead_score:           leads.length\n    ? Math.round(leads.reduce((s, l) => s + (l.lead_score || 0), 0) / leads.length)\n    : 0,\n};\n\nconst topLeads = [...leads]\n  .sort((a, b) => (b.lead_score || 0) - (a.lead_score || 0))\n  .slice(0, 10)\n  .map(l => ({\n    company_name:      l.company_name,\n    website:           l.website,\n    lead_score:        l.lead_score,\n    pixel_id:          l.pixel_id,\n    ad_status_summary: l.has_recent_inactive_ads\n      ? 'Lapsed ads < 12m'\n      : l.total_ads_found > 0 ? 'Older ad history'\n      : 'No ad history',\n    lead_reason:       l.lead_reason,\n  }));\n\nconst summary = {\n  generated_at: new Date().toISOString(),\n  stats,\n  top_10_leads: topLeads,\n  all_leads: leads,\n};\n\n// Human-readable Slack/email summary\nconst slackText = [\n  `*UK Travel Lead Finder – ${new Date().toLocaleDateString('en-GB')}*`,\n  `Found *${stats.total_qualified_leads}* qualified leads`,\n  `• ${stats.with_pixel} have a Meta Pixel installed`,\n  `• ${stats.with_recent_ad_history} ran Meta ads in the last 12 months`,\n  `• ${stats.no_ad_history} have never run Meta ads (pixel only)`,\n  '',\n  '*Top 5 leads:*',\n  ...topLeads.slice(0, 5).map((l, i) =>\n    `${i + 1}. ${l.company_name} – Score: ${l.lead_score} – ${l.ad_status_summary} – ${l.website}`\n  ),\n].join('\\n');\n\nreturn [{ json: { ...summary, slack_text: slackText } }];"
+            },
+            "id": "node_summary",
+            "name": "Build Summary Report",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [2260, 340]
+        }
+    ],
+    "connections": {
+        "Run Manually": {
+            "main": [
+                [{ "node": "Discover UK Travel Companies", "type": "main", "index": 0 }]
+            ]
+        },
+        "Run Weekly (Mon 8am)": {
+            "main": [
+                [{ "node": "Discover UK Travel Companies", "type": "main", "index": 0 }]
+            ]
+        },
+        "Discover UK Travel Companies": {
+            "main": [
+                [{ "node": "Remove Duplicate Domains", "type": "main", "index": 0 }]
+            ]
+        },
+        "Remove Duplicate Domains": {
+            "main": [
+                [{ "node": "Analyse Company", "type": "main", "index": 0 }]
+            ]
+        },
+        "Analyse Company": {
+            "main": [
+                [{ "node": "Qualified Leads Only", "type": "main", "index": 0 }]
+            ]
+        },
+        "Qualified Leads Only": {
+            "main": [
+                [{ "node": "Sort by Lead Score", "type": "main", "index": 0 }]
+            ]
+        },
+        "Sort by Lead Score": {
+            "main": [
+                [{ "node": "Format Lead Record", "type": "main", "index": 0 }]
+            ]
+        },
+        "Format Lead Record": {
+            "main": [
+                [{ "node": "Aggregate All Leads", "type": "main", "index": 0 }]
+            ]
+        },
+        "Aggregate All Leads": {
+            "main": [
+                [{ "node": "Build Summary Report", "type": "main", "index": 0 }]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1",
+        "saveManualExecutions": true,
+        "callerPolicy": "workflowsFromSameOwner",
+        "errorWorkflow": ""
+    },
+    "versionId": "1",
+    "meta": {
+        "templateCredsSetupCompleted": false,
+        "instanceId": ""
+    },
+    "tags": ["lead-generation", "travel", "meta-ads", "firecrawl"]
+}

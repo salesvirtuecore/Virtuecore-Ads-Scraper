@@ -18,6 +18,7 @@ if (!apiKey) {
 const workflowFiles = [
     path.resolve("n8n/workflows/virtuecore-events-router.json"),
     path.resolve("n8n/workflows/virtuecore-event-relay.json"),
+    path.resolve("n8n/workflows/uk-travel-lead-finder.json"),
 ];
 
 const headers = {
