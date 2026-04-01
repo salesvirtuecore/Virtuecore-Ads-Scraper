@@ -1,0 +1,42 @@
+name: Deploy n8n Workflows
+
+on:
+  # Run automatically whenever workflow files change
+  push:
+    branches:
+      - claude/travel-company-ad-scraper-5DCGy
+      - main
+    paths:
+      - 'virtuecore-adint/n8n/workflows/**'
+      - 'virtuecore-adint/scripts/push-n8n-workflows.mjs'
+
+  # Also allow manual trigger from GitHub Actions UI
+  workflow_dispatch:
+    inputs:
+      activate:
+        description: 'Activate workflows after deploy?'
+        required: false
+        default: 'true'
+
+jobs:
+  deploy:
+    name: Push workflows to n8n
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: virtuecore-adint
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Deploy all workflows to n8n
+        run: node scripts/push-n8n-workflows.mjs
+        env:
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+          N8N_ACTIVATE: ${{ github.event.inputs.activate || 'true' }}
