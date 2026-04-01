@@ -1,17 +1,14 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const baseUrl = (process.env.N8N_BASE_URL || "").replace(/\/$/, "");
+const DEFAULT_N8N_URL = "https://virtualcore.app.n8n.cloud";
+const baseUrl = (process.env.N8N_BASE_URL || DEFAULT_N8N_URL).replace(/\/$/, "");
 const apiKey = process.env.N8N_API_KEY || "";
 const activateAfterPush = (process.env.N8N_ACTIVATE || "true").toLowerCase() !== "false";
 
-if (!baseUrl) {
-    console.error("Missing N8N_BASE_URL environment variable.");
-    process.exit(1);
-}
-
 if (!apiKey) {
     console.error("Missing N8N_API_KEY environment variable.");
+    console.error("Run: N8N_API_KEY=<your-token> node scripts/push-n8n-workflows.mjs");
     process.exit(1);
 }
 
